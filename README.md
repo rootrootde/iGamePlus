@@ -24,6 +24,10 @@ A WHDLoad game launcher for Amiga, forked from [iGame](https://github.com/MrZamm
 - Fixed stack buffer overflows in path handling
 - Optimized linked list operations with O(1) tail insertion
 
+## Warning
+
+This software has only been tested on an Amiga 1200 with PiStorm32 (040 build). Other configurations may work but are untested. **Use at your own risk.** In particular, the "Delete All" button in the hidden games window will **permanently delete game files from disk**. Make sure you have backups before using destructive features. The author takes no responsibility for any data loss.
+
 ## Installing
 
 Place the iGame folder anywhere on your drive. Requirements:
