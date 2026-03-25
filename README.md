@@ -1,6 +1,6 @@
 # iGame+
 
-A WHDLoad game launcher for Amiga, forked from [iGame](https://github.com/midwan/iGame) by Emmanuel Vasilakis.
+A WHDLoad game launcher for Amiga, forked from [iGame](https://github.com/MrZammler/iGame) by Emmanuel Vasilakis.
 
 ![Alt text](/igame_screen.png?raw=true "iGame screenshot")
 
@@ -10,7 +10,7 @@ A WHDLoad game launcher for Amiga, forked from [iGame](https://github.com/midwan
 - **Configurable columns** — show/hide Year, Players, Genre, Times Played, Rating columns
 - **Drag-sortable column order** — reorder columns via drag and drop in Settings, with live preview
 - **Short Year display** — option to show 2-digit years (96 instead of 1996) to save screen space
-- **Rating column** — displays ratings from lemonamiga.com
+- **Rating column** — displays game ratings
 - **Rating filter** — type `r>8` in the filter field to show games rated 8.0+, combine with title search like `r>7.5 elite`
 - **Side panel toggle** — hotkey B to show/hide the genre and chipset filter panel
 - **Favourite hotkey** — press F to toggle favourite, favourites shown in bold
@@ -65,4 +65,4 @@ make -f Makefile.docker CPU=060    # 68060
 
 GPLv3 — see [COPYING](COPYING)
 
-Based on iGame by Emmanuel Vasilakis — https://github.com/midwan/iGame
+Based on iGame by Emmanuel Vasilakis — https://github.com/MrZammler/iGame
