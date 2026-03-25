@@ -1,0 +1,220 @@
+kind: pipeline
+type: docker
+name: awsbuilders-poweron
+
+clone:
+  disable: true
+
+steps:
+- name: start-aws-instances
+  pull: always
+  image: amazon/aws-cli
+  environment:
+    AWS_ACCESS_KEY_ID:
+      from_secret: AWS_ACCESS_KEY
+    AWS_SECRET_ACCESS_KEY:
+      from_secret: AWS_SECRET_ACCESS_KEY
+  commands:
+    - aws ec2 start-instances --region eu-north-1 --instance-ids i-07474e4fe80f14754
+
+trigger:
+  branch:
+    include:
+    - master
+    - develop
+  event:
+    include:
+    - push
+    - pull_request
+    - tag
+
+---
+
+kind: pipeline
+type: docker
+name: compile-tests
+
+workspace:
+  path: /drone/src
+
+steps:
+- name: compile-m68k
+  pull: always
+  image: walkero/docker4amigavbcc:latest-m68k
+  commands:
+  - make -f Makefile.docker CPU=000
+  - make -f Makefile.docker CPU=030
+  - make -f Makefile.docker CPU=040
+  - make -f Makefile.docker CPU=060
+- name: compile-os4
+  pull: always
+  image: walkero/docker4amigavbcc:latest-ppc
+  commands:
+  - make -f Makefile.docker CPU=OS4
+- name: compile-mos
+  pull: always
+  image: walkero/docker4amigavbcc:latest-mos
+  commands:
+  - make -f Makefile.docker CPU=MOS
+- name: create-release-lha
+  image: walkero/docker4amigavbcc:latest-m68k
+  commands:
+  - make -f Makefile.docker release
+  depends_on:
+  - compile-m68k
+  - compile-os4
+  - compile-mos
+- name: Prepare test release
+  image: walkero/lha-on-docker:latest
+  environment:
+    OS4DEPOT_PASSPHRASE:
+      from_secret: OS4DEPOT_PASSPHRASE
+  commands:
+  - mkdir test-release
+  - ls -la ./
+  - cp iGame--$(date +'%Y%m%d').lha ./test-release/iGame-$(date +'%Y%m%d%H%M').lha
+  - sed -i "s/VERSION_TAG/nightly-$(date +'%Y%m%d%H%M')/" ./aminet.readme
+  - sed -i "s/VERSION_TAG/nightly-$(date +'%Y%m%d%H%M')/" ./os4depot.readme
+  - sed -i "s/OS4DEPOT_PASSPHRASE/$OS4DEPOT_PASSPHRASE/" ./os4depot.readme
+  - cp ./os4depot.readme ./test-release/os4depot.readme
+  - cp ./aminet.readme ./test-release/aminet.readme
+  - ls -la ./test-release
+  depends_on:
+  - create-release-lha
+# - name: Upload to TEST FTP
+#   image: cschlosser/drone-ftps
+#   environment:
+#     FTP_USERNAME:
+#       from_secret: TESTFTP_USERNAME
+#     FTP_PASSWORD:
+#       from_secret: TESTFTP_PASSWORD
+#     PLUGIN_HOSTNAME: mediavault.amiga-projects.net:21
+#     PLUGIN_SRC_DIR: /test-release
+#     PLUGIN_DEST_DIR: ./web/betas
+#     PLUGIN_SECURE: "false"
+#     PLUGIN_VERIFY: "false"
+#     PLUGIN_CLEAN_DIR: "false"
+#   depends_on:
+#   - Prepare test release
+
+trigger:
+  branch:
+    include:
+    - master
+    - develop
+  event:
+    include:
+    - push
+    - pull_request
+
+depends_on:
+  - awsbuilders-poweron
+
+node:
+  agents: awsbuilders
+
+---
+
+kind: pipeline
+type: docker
+name: compile-release-bytag
+
+workspace:
+  path: /drone/src
+
+steps:
+- name: compile-m68k
+  pull: always
+  image: walkero/docker4amigavbcc:latest-m68k
+  commands:
+  - make -f Makefile.docker CPU=000
+  - make -f Makefile.docker CPU=030
+  - make -f Makefile.docker CPU=040
+  - make -f Makefile.docker CPU=060
+- name: compile-os4
+  pull: always
+  image: walkero/docker4amigavbcc:latest-ppc
+  commands:
+  - make -f Makefile.docker CPU=OS4
+- name: compile-mos
+  pull: always
+  image: walkero/docker4amigavbcc:latest-mos
+  commands:
+  - make -f Makefile.docker CPU=MOS
+- name: Create release
+  image: walkero/docker4amigavbcc:latest-m68k
+  commands:
+  - make -f Makefile.docker release
+  depends_on:
+  - compile-m68k
+  - compile-os4
+  - compile-mos
+- name: deploy-on-repo
+  image: plugins/github-release
+  settings:
+    api_key:
+      from_secret: GITHUB_RELEASE_API_KEY
+    files:
+      - "iGame-*.lha"
+  title: "iGame release ${DRONE_TAG}"
+  depends_on:
+  - Create release
+- name: Prepare Aminet release
+  image: walkero/lha-on-docker:latest
+  commands:
+  - mkdir aminet-release
+  - cp iGame-${DRONE_TAG}-$(date +'%Y%m%d').lha ./aminet-release/iGame.lha
+  - sed -i "s/VERSION_TAG/${DRONE_TAG}/" ./aminet.readme
+  - cp ./aminet.readme ./aminet-release/iGame.readme
+  depends_on:
+  - Create release
+- name: Upload to Aminet
+  image: cschlosser/drone-ftps
+  environment:
+    FTP_USERNAME: "anonymous"
+    FTP_PASSWORD: "walkero@gmail.com"
+    PLUGIN_HOSTNAME: main.aminet.net:21
+    PLUGIN_SRC_DIR: /aminet-release
+    PLUGIN_DEST_DIR: ./new
+    PLUGIN_SECURE: "false"
+    PLUGIN_VERIFY: "false"
+    PLUGIN_CHMOD: "false"
+  depends_on:
+  - Prepare Aminet release
+- name: Prepare OS4Depot release
+  image: walkero/lha-on-docker:latest
+  environment:
+    OS4DEPOT_PASSPHRASE:
+      from_secret: OS4DEPOT_PASSPHRASE
+  commands:
+  - mkdir os4depot-release
+  - cp iGame-${DRONE_TAG}-$(date +'%Y%m%d').lha ./os4depot-release/iGame.lha
+  - sed -i "s/VERSION_TAG/${DRONE_TAG}/" ./os4depot.readme
+  - sed -i "s/OS4DEPOT_PASSPHRASE/$OS4DEPOT_PASSPHRASE/" ./os4depot.readme
+  - cp ./os4depot.readme ./os4depot-release/iGame_lha.readme
+  depends_on:
+  - Create release
+- name: Upload to OS4Depot
+  image: cschlosser/drone-ftps
+  environment:
+    FTP_USERNAME: "ftp"
+    FTP_PASSWORD: ""
+    PLUGIN_HOSTNAME: os4depot.net:21
+    PLUGIN_SRC_DIR: /os4depot-release
+    PLUGIN_DEST_DIR: ./upload
+    PLUGIN_SECURE: "false"
+    PLUGIN_VERIFY: "false"
+    PLUGIN_CHMOD: "false"
+  depends_on:
+  - Prepare OS4Depot release
+
+trigger:
+  event:
+    include:
+    - tag
+
+depends_on:
+  - awsbuilders-poweron
+
+node:
+  agents: awsbuilders
