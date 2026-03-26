@@ -204,6 +204,10 @@ int main(int argc, char **argv)
 				set(app->WI_Blacklist, MUIA_Window_Open, TRUE);
 				break;
 
+			case MENU_IMPORTRATINGS:
+				import_ratings();
+				break;
+
 			case MENU_TOGGLESIDEPANEL:
 				toggle_side_panel();
 				break;

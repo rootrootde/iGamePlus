@@ -3,7 +3,7 @@
   Header file for iGame
 
   Copyright (c) 2019, Emmanuel Vasilakis and contributors
-  Copyright (c) 2026, rootroot
+  Copyright (c) 2026, rootrootde
 
   This file is part of iGame.
 
@@ -33,6 +33,7 @@
 #define DEFAULT_SCREENSHOT_FILE "PROGDIR:igame.iff"
 #define DEFAULT_LOGO_FILE "PROGDIR:logo.iff"
 #define DEFAULT_BLACKLIST_FILE "PROGDIR:igame.blacklist"
+#define DEFAULT_RATINGS_FILE "PROGDIR:igame.ratings"
 #define DEFAULT_SETTINGS_FILE "igame.prefs"
 #define DEFAULT_IGAMEDATA_FILE "igame.data"
 #define DEFAULT_LOCALHOST_URL "http://localhost"
@@ -207,6 +208,7 @@ enum {
 	MENU_DELETEGAME,
 	MENU_BLACKLIST,
 	MENU_TOGGLESIDEPANEL,
+	MENU_IMPORTRATINGS,
 	MENU_LAST
 };
 

@@ -3,7 +3,7 @@
   GUI header file for iGame
 
   Copyright (c) 2018, Emmanuel Vasilakis
-  Copyright (c) 2026, rootroot
+  Copyright (c) 2026, rootrootde
 
   This file is part of iGame.
 

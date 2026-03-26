@@ -3,7 +3,7 @@
   GUI source for iGame
 
   Copyright (c) 2019, Emmanuel Vasilakis and contributors
-  Copyright (c) 2026, rootroot
+  Copyright (c) 2026, rootrootde
 
   This file is part of iGame.
 
@@ -101,6 +101,7 @@ static struct NewMenu MenuMainWin[] =
 	{ NM_ITEM ,  STR_ID(MSG_MNlabelScan)							,"R",0 ,0			,(APTR)MENU_SCAN },
 	{ NM_ITEM ,  STR_ID(MSG_MNMainAddnonWHDLoadgame)				,"A",0 ,0			,(APTR)MENU_ADDGAME },
 	{ NM_ITEM ,  STR_ID(MSG_MNMainBlacklist)						, 0 ,0 ,0			,(APTR)MENU_BLACKLIST },
+	{ NM_ITEM ,  STR_ID(MSG_MNMainImportRatings)					, 0 ,0 ,0			,(APTR)MENU_IMPORTRATINGS },
 	{ NM_ITEM ,  NM_BARLABEL										, 0 ,0 ,0			,(APTR)0 },
 	{ NM_ITEM ,  STR_ID(MSG_MNMainAbout)							,"?",0 ,0			,(APTR)MENU_ABOUT },
 	{ NM_ITEM ,  NM_BARLABEL										, 0 ,0 ,0			,(APTR)0 },
@@ -388,7 +389,7 @@ struct ObjApp *CreateApp(void)
 	);
 
 #ifdef __morphos__
-	APTR	MNlabel2Actions, MNlabelScan, MNMainAddnonWHDLoadgame, MNMainBlacklist;
+	APTR	MNlabel2Actions, MNlabelScan, MNMainAddnonWHDLoadgame, MNMainBlacklist, MNMainImportRatings;
 	APTR	MNMainBarLabel0, MNMainAbout;
 	APTR	MNMainBarLabel1, MNMainQuit, MNlabel2Game, MNMainProperties, MNMainIformation, MNMainOpenCurrentDir;
 	APTR	MNMainHide, MNMainToggleFavourite;
@@ -449,6 +450,7 @@ struct ObjApp *CreateApp(void)
 	MakeStaticHook(SettingStartWithFavoritesChangedHook, setting_start_with_favorites_changed);
 	MakeStaticHook(SettingsUseHook, settings_use);
 	MakeStaticHook(SettingUseIgameDataTitleHook, settingUseIgameDataTitleChanged);
+	MakeStaticHook(ImportRatingsHook, import_ratings);
 	MakeStaticHook(ColumnToggleChangedHook, column_toggle_changed);
 	MakeStaticHook(ColumnOrderChangedHook, column_order_changed);
 	MakeStaticHook(SettingShortYearChangedHook, setting_short_year_changed);
@@ -647,6 +649,10 @@ struct ObjApp *CreateApp(void)
 	MNMainBlacklist = MenuitemObject,
 		MUIA_Menuitem_Title, GetMBString(MSG_MNMainBlacklist),
 		End;
+
+	MNMainImportRatings = MenuitemObject,
+		MUIA_Menuitem_Title, GetMBString(MSG_MNMainImportRatings),
+		End;
 #endif
 
 	MNMainOpenList = MenuitemObject,
@@ -683,6 +689,7 @@ struct ObjApp *CreateApp(void)
 		MUIA_Family_Child, MNlabelScan,
 		MUIA_Family_Child, MNMainAddnonWHDLoadgame,
 		MUIA_Family_Child, MNMainBlacklist,
+		MUIA_Family_Child, MNMainImportRatings,
 		/* MUIA_Family_Child, MNMainBarLabel5, */
 		/* MUIA_Family_Child, MNMainOpenList, */
 		/* MUIA_Family_Child, MNMainSaveList, */
@@ -1671,6 +1678,13 @@ struct ObjApp *CreateApp(void)
 		object->App,
 		2,
 		MUIM_Application_ReturnID, MENU_BLACKLIST
+	);
+
+	DoMethod(MNMainImportRatings,
+		MUIM_Notify, MUIA_Menuitem_Trigger, MUIV_EveryTime,
+		object->App,
+		2,
+		MUIM_CallHook, &ImportRatingsHook
 	);
 
 	DoMethod(MNMainHide,

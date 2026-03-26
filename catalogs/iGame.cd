@@ -438,3 +438,15 @@ Short Year
 ;
 MSG_BT_BlacklistDeleteAll (//)
 Delete All
+;
+MSG_MNMainImportRatings (//)
+Import Ratings...
+;
+MSG_ImportRatingsComplete (//)
+Imported ratings for %d games.
+;
+MSG_ImportRatingsFileNotFound (//)
+Ratings file not found!
+;
+MSG_ConfirmDeleteAllHidden (//)
+Are you sure you want to delete ALL hidden games from disk?

@@ -3,7 +3,7 @@
   Misc functions header for iGame
 
   Copyright (c) 2018, Emmanuel Vasilakis
-  Copyright (c) 2026, rootroot
+  Copyright (c) 2026, rootrootde
 
   This file is part of iGame.
 
@@ -75,5 +75,6 @@ void sync_column_order_from_list(void);
 void setting_short_year_changed(void);
 void apply_column_settings(void);
 int is_column_visible(int col);
+void import_ratings(void);
 
 #endif

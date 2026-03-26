@@ -3,7 +3,7 @@
   Misc functions for iGame
 
   Copyright (c) 2019, Emmanuel Vasilakis and contributors
-  Copyright (c) 2026, rootroot
+  Copyright (c) 2026, rootrootde
 
   This file is part of iGame.
 
@@ -1735,6 +1735,89 @@ void app_stop(void)
 void save_list(void)
 {
 	slavesListSaveToCSV(DEFAULT_GAMESLIST_FILE);
+}
+
+void import_ratings(void)
+{
+	const int lineSize = 256;
+	int count = 0;
+	char buf[MAX_SLAVE_TITLE_SIZE];
+
+	if (!check_path_exists(DEFAULT_RATINGS_FILE))
+	{
+		msg_box((const char *)GetMBString(MSG_ImportRatingsFileNotFound));
+		return;
+	}
+
+	const BPTR fp = Open(DEFAULT_RATINGS_FILE, MODE_OLDFILE);
+	if (!fp)
+	{
+		msg_box((const char *)GetMBString(MSG_ImportRatingsFileNotFound));
+		return;
+	}
+
+	set(app->WI_MainWindow, MUIA_Window_Sleep, TRUE);
+
+	char *line = malloc(lineSize);
+	if (!line)
+	{
+		Close(fp);
+		set(app->WI_MainWindow, MUIA_Window_Sleep, FALSE);
+		msg_box((const char *)GetMBString(MSG_NotEnoughMemory));
+		return;
+	}
+
+	while (FGets(fp, line, lineSize) != NULL)
+	{
+		int len = strlen(line);
+		if (len > 0 && line[len - 1] == '\n')
+			line[--len] = '\0';
+
+		if (len == 0 || line[0] == ';')
+			continue;
+
+		char *sep = strchr(line, ';');
+		if (!sep)
+			continue;
+
+		*sep = '\0';
+		char *title = line;
+		char *rating = sep + 1;
+
+		if (isStringEmpty(title) || isStringEmpty(rating))
+			continue;
+
+		slavesList *currPtr = getSlavesListHead();
+		while (currPtr != NULL)
+		{
+			int matched = 0;
+			if (strlen(currPtr->title) == strlen(title) &&
+				strcasestr(currPtr->title, title) != NULL)
+				matched = 1;
+			else if (!isStringEmpty(currPtr->user_title) &&
+				strlen(currPtr->user_title) == strlen(title) &&
+				strcasestr(currPtr->user_title, title) != NULL)
+				matched = 1;
+
+			if (matched)
+			{
+				strncpy(currPtr->rating, rating, sizeof(currPtr->rating) - 1);
+				currPtr->rating[sizeof(currPtr->rating) - 1] = '\0';
+				count++;
+			}
+			currPtr = currPtr->next;
+		}
+	}
+
+	free(line);
+	Close(fp);
+
+	filter_change();
+
+	snprintf(buf, sizeof(buf), (const char *)GetMBString(MSG_ImportRatingsComplete), count);
+	setStatusText(buf);
+
+	set(app->WI_MainWindow, MUIA_Window_Sleep, FALSE);
 }
 
 // TODO: Make this work

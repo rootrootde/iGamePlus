@@ -111,6 +111,15 @@ void blacklistWindowUnhideAll(void)
 
 void blacklistWindowDeleteAll(void)
 {
+	struct EasyStruct confirm;
+	confirm.es_StructSize = sizeof confirm;
+	confirm.es_Flags = 0;
+	confirm.es_Title = (UBYTE *)GetMBString(MSG_WI_Blacklist);
+	confirm.es_TextFormat = (unsigned char *)GetMBString(MSG_ConfirmDeleteAllHidden);
+	confirm.es_GadgetFormat = (UBYTE *)"Yes|No";
+	if (!EasyRequest(NULL, &confirm, NULL))
+		return;
+
 	/* Delete files and remove all blacklisted entries */
 	blacklistNode *curr = blacklistGetHead();
 	while (curr != NULL)
