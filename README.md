@@ -1,51 +1,73 @@
-[![Translation status](https://translate.igame.rocks/widget/igame/igame-app/status-badge.png)](https://translate.igame.rocks/engage/igame/)
-[![Build Status](https://drone-gh.intercube.gr/api/badges/MrZammler/iGame/status.svg)](https://drone-gh.intercube.gr/MrZammler/iGame)
-[![Codacy Badge](https://app.codacy.com/project/badge/Grade/0c890051ba05476f8ea4f9e4ad846a7c)](https://www.codacy.com/gh/walkero-gr/iGame/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=walkero-gr/iGame&amp;utm_campaign=Badge_Grade)
+# iGame+
 
-## Description
-
-iGame is a frontend to launching WHDLoad games and demos for the Amiga. It is based on Magic User Interface and it works on AmigaOS 3.x Classic Amiga computers, AmigaOS 4 and MorphOS systems.
-
-http://winterland.no-ip.org/igame/
+A WHDLoad game launcher for Amiga, forked from [iGame](https://github.com/MrZammler/iGame) by Emmanuel Vasilakis.
 
 ![Alt text](/igame_screen.png?raw=true "iGame screenshot")
 
-## Builds and releases
+## What's new in iGame+
 
-The iGame_rel folder should contain builds that are done at some point in time, following any major code changes.
+### New features
+- **Configurable columns** — show/hide Year, Players, Genre, Times Played, Rating columns
+- **Drag-sortable column order** — reorder columns via drag and drop in Settings, with live preview
+- **Short Year display** — option to show 2-digit years (96 instead of 1996) to save screen space
+- **Rating column** — displays game ratings
+- **Rating filter** — type `r>8` in the filter field to show games rated 8.0+, combine with title search like `r>7.5 elite`
+- **Import ratings** — bulk-import ratings from `PROGDIR:igame.ratings` file (Actions menu)
+- **Side panel toggle** — hotkey B to show/hide the genre and chipset filter panel
+- **Favourite hotkey** — press F to toggle favourite, favourites shown in bold
+- **Hide game hotkey** — press H to hide a game from the list
+- **Hidden games management** — Unhide Selected, Unhide All, and Delete All (removes files from disk, with confirmation)
+- **Start with favourites** — option to show only favourites on launch
+- **Stale game detection** — on rescan, detects games no longer on disk and asks before removing
+
+### Fixes
+- Fixed memory leaks in CSV loading, screenshot handling, and WHDLoad execution
+- Fixed stack buffer overflows in path handling
+- Optimized linked list operations with O(1) tail insertion
+
+## Warning
+
+This software has only been tested on an Amiga 1200 with PiStorm32 (040 build). Other configurations may work but are untested. **Use at your own risk.** In particular, the "Delete All" button in the hidden games window will **permanently delete game files from disk**. Make sure you have backups before using destructive features. The author takes no responsibility for any data loss.
 
 ## Installing
 
-Just place the iGame folder anywhere you want on your drive. iGame also is looking for the following libraries. Some of them are required to have it working. If any of them is missing, an alert window will show up.
+Place the iGame folder anywhere on your drive. Requirements:
 
- - Kickstart 2.04 or higher
- - Workbench 2.1 or higher
- - MUI 3.8 or higher
- - icon.library v37+ (v44+ Recommended)
- - guigfx.library (optional)
- - render.library (optional)
- - guigfx.mcc (optional)
- - Texteditor.mcc
- - NListviews.mcc
- - Urltext.mcc (optional)
+- Kickstart 2.04+
+- Workbench 2.1+
+- MUI 3.8+
+- icon.library v37+ (v44+ recommended)
+- guigfx.library (optional)
+- render.library (optional)
+- guigfx.mcc (optional)
+- Texteditor.mcc
+- NListviews.mcc
+- Urltext.mcc (optional)
 
-Make sure your installation contains MUI and the above libraries. You can find the latest versions in Aminet.
+## Builds
 
-## Compiling
+Available CPU targets:
 
-Please check the [Wiki](https://github.com/MrZammler/iGame/wiki/Compiling-iGame)
+| Binary | Target |
+|--------|--------|
+| iGame.000 | 68000 (any Amiga) |
+| iGame.030 | 68030 (A1200, A3000, A4000) |
+| iGame.040 | 68040 (A4000/040, accelerators) |
+| iGame.060 | 68060 (accelerators) |
 
-## Contributing
+Download from the [Releases](https://github.com/rootrootde/iGamePlus/releases) page.
 
-Please do :-)
+### Compiling with Docker
 
-iGame is being translated using Weblate, a web tool designed to ease translating for both developers and translators. If you would like to contribute to translation of iGame, you need to register on [https://translate.igame.rocks](https://translate.igame.rocks). Once you have activated your account, proceed to the translation section.
+```bash
+make -f Makefile.docker CPU=000    # 68000
+make -f Makefile.docker CPU=030    # 68030
+make -f Makefile.docker CPU=040    # 68040
+make -f Makefile.docker CPU=060    # 68060
+```
 
-[![Translation status](https://translate.igame.rocks/widget/igame/igame-app/287x66-grey.png)](https://translate.igame.rocks/engage/igame/)
+## License
 
-If you would like to contribute with code, please create pull requests to this repository.
+GPLv3 — see [COPYING](COPYING)
 
-## Usage
-
-Docs for the usage of iGame can be found inside the guide directory. The guide will be packed inside iGame releases and
-can also be brought up by pressing the Help key when running iGame.
+Based on iGame by Emmanuel Vasilakis — https://github.com/MrZammler/iGame
