@@ -203,11 +203,11 @@ ifneq ($(origin DRONE_TAG),undefined)
 	@sed -i "s/RELEASE_DATE/$(shell date "+%Y-%m-%d")/" ./CHANGELOG.md
 endif
 	@cp CHANGELOG.md iGamePlus-$(DRONE_TAG)/
-	@if [ -f "iGame.020" ]; then cp iGame.020 iGamePlus-$(DRONE_TAG)/iGame+; fi
-	@if [ -f "iGame.040" ]; then cp iGame.040 iGamePlus-$(DRONE_TAG)/iGame+.040; fi
-	@if [ -f "iGame.060" ]; then cp iGame.060 iGamePlus-$(DRONE_TAG)/iGame+.060; fi
-	@if [ -f "iGame.MOS" ]; then cp iGame.MOS iGamePlus-$(DRONE_TAG)/iGame+.MOS; fi
-	@if [ -f "iGame.OS4" ]; then cp iGame.OS4 iGamePlus-$(DRONE_TAG)/iGame+.OS4; fi
+	@if [ -f "iGame.020" ]; then cp iGame.020 iGamePlus-$(DRONE_TAG)/iGamePlus; fi
+	@if [ -f "iGame.040" ]; then cp iGame.040 iGamePlus-$(DRONE_TAG)/iGamePlus.040; fi
+	@if [ -f "iGame.060" ]; then cp iGame.060 iGamePlus-$(DRONE_TAG)/iGamePlus.060; fi
+	@if [ -f "iGame.MOS" ]; then cp iGame.MOS iGamePlus-$(DRONE_TAG)/iGamePlus.MOS; fi
+	@if [ -f "iGame.OS4" ]; then cp iGame.OS4 iGamePlus-$(DRONE_TAG)/iGamePlus.OS4; fi
 	@lha -aq2o6 iGamePlus-$(DRONE_TAG).lha iGamePlus-$(DRONE_TAG)/ iGamePlus-$(DRONE_TAG).info
 
 clean-release:

@@ -415,7 +415,7 @@ struct ObjApp *CreateApp(void)
 #endif // ndef __morphos__
 
 	snprintf(version_string, sizeof(version_string),
-		"iGame+ %d.%d.%d",
+		"iGamePlus %d.%d.%d",
 		MAJOR_VERS, MINOR_VERS, PATCH_VERS
 	);
 

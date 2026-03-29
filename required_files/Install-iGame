@@ -39,7 +39,7 @@
 ;=============================================================================
 ; Set defaults
 
-(set #appName "iGame")
+(set #appName "iGamePlus")
 (set #defaultDest "RAM:")
 
 ;=============================================================================
@@ -176,21 +176,20 @@
 			(set #selectedCPU 0)
 		)
 		(if (= #detectedCPU "68030")
-			(set #selectedCPU 1)
+			(set #selectedCPU 0)
 		)
 		(if (= #detectedCPU "68040")
-			(set #selectedCPU 2)
+			(set #selectedCPU 1)
 		)
 		(if (= #detectedCPU "68060")
-			(set #selectedCPU 3)
+			(set #selectedCPU 2)
 		)
 
 		(set #selectedCPU
 				(askchoice
 						(prompt #acknowledgeCPU)
 						(help @askchoice-help)
-						(choices 	"68000"
-									"68030"
+						(choices 	"68020"
 									"68040"
 									"68060"
 						)
@@ -201,19 +200,19 @@
 
 		; finally convert the system number into a string for easier understanding
 		(set #selectedVersion
-				(select #selectedCPU "iGame" "iGame.030" "iGame.040" "iGame.060")
+				(select #selectedCPU "iGamePlus" "iGamePlus.040" "iGamePlus.060")
 		)
 	)
 )
 
 (if (= #detectedSystem "os4")
     (
-        (set #selectedVersion "iGame.OS4")
+        (set #selectedVersion "iGamePlus.OS4")
     )
 )
 (if (= #detectedSystem "mos")
     (
-        (set #selectedVersion "iGame.MOS")
+        (set #selectedVersion "iGamePlus.MOS")
     )
 )
 
@@ -236,7 +235,7 @@
 	)
 )
 
-(set #destination (tackon #selectedDest "iGame"))
+(set #destination (tackon #selectedDest "iGamePlus"))
 
 (if (<> seldir 0)
 	(
@@ -494,7 +493,7 @@
 	(prompt (cat "Should iGame be installed at\n" #destination "?"))
 	(source #selectedVersion)
 	(dest #destination)
-	(newname "iGame")
+	(newname "iGamePlus")
 	(help "This step will copy the iGame executable at the destination folder. If this is the first time you install iGame or you want to update an older version, proceed with the copy.")
 	(confirm "expert")
 )

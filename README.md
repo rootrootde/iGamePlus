@@ -62,11 +62,11 @@ Available CPU targets:
 
 | Binary | Target |
 |--------|--------|
-| iGame | 68020 (A1200, A3000, A4000/030) |
-| iGame.040 | 68040 (A4000/040, accelerators) |
-| iGame.060 | 68060 (accelerators) |
-| iGame.MOS | MorphOS (PPC) |
-| iGame.OS4 | AmigaOS 4.1 (PPC) |
+| iGamePlus | 68020 (A1200, A3000, A4000/030) |
+| iGamePlus.040 | 68040 (A4000/040, accelerators) |
+| iGamePlus.060 | 68060 (accelerators) |
+| iGamePlus.MOS | MorphOS (PPC) |
+| iGamePlus.OS4 | AmigaOS 4.1 (PPC) |
 
 Download from the [Releases](https://github.com/rootrootde/iGamePlus/releases) page.
 
