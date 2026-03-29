@@ -1,35 +1,32 @@
+# build artifacts
 iGame
+iGame.0*0
+iGame.MOS
+iGame.OS4
 src/*_cat.*
 src/*.o
 src/iGame_strings.h
-iGame.0*0
-iGame_rel/iGame.info
-iGame.MOS
-iGame.OS4
+
+# release artifacts
 iGame-v*/
 iGame-v*.lha
 iGame-v*.info
+iGame_rel/
+
+# runtime files
+gameslist.csv
+igame.prefs
+igame.ratings
+repos.prefs
+
+# emulator artifacts
+*.uaem
 send_to_emul
-catalogs/*/iGame.catalog
+
+# editor/os
 .vscode
 .idea
 .DS_Store
-*.uaem
-/Disk.info
-/MUI.info
-/Picasso96.info
-/iGame.040.info
-/install_temp.info
-install_temp/
-MUI/
-Picasso96/
-gameslist.csv
-igame.prefs
-repos.prefs
-screen1.png
-noguigfx.png
-guigfx.png
-guigfx_render_nofpu.lha
-settings.jpg
-igame_screenshot.png
-igame.ratings
+
+# catalogs (built from .po)
+catalogs/*/iGame.catalog
