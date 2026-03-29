@@ -450,3 +450,9 @@ Ratings file not found!
 ;
 MSG_ConfirmDeleteAllHidden (//)
 Are you sure you want to delete ALL hidden games from disk?
+;
+MSG_GR_GameInfoTitle (//)
+Game Info
+;
+MSG_MNMainToggleFilterBar (//)
+Toggle Filter Bar

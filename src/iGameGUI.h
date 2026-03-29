@@ -42,10 +42,21 @@ struct ObjApp
 	APTR GR_spacedScreenshot;
 	APTR IM_GameImage_0;
 	APTR IM_GameImage_1;
-	APTR Space_Sidepanel;
+	APTR GR_FilterBar;
+	// Sidebar game info panel
+	APTR GR_GameInfo;
+	APTR TX_SB_Title;
+	APTR TX_SB_Genre;
+	APTR TX_SB_ReleasedBy;
+	APTR TX_SB_Players;
+	APTR TX_SB_Chipset;
+	APTR TX_SB_Rating;
+	APTR TX_SB_TimesPlayed;
 	APTR LV_GamesList;
 	APTR CY_FilterList;
 	APTR LV_GenresList;
+	APTR POP_GenreFilter;
+	APTR STR_GenreFilter;
 	APTR CY_ChipsetList;
 	APTR TX_Status;
 	// Properties Window
@@ -73,9 +84,6 @@ struct ObjApp
 	APTR WI_Settings;
 	APTR CH_Screenshots;
 	APTR CH_NoGuiGfx;
-	APTR CY_ScreenshotSize;
-	APTR STR_Width;
-	APTR STR_Height;
 	APTR RA_TitlesFrom;
 	APTR CH_SmartSpaces;
 	APTR CH_UseIgameDataTitle;
@@ -95,7 +103,6 @@ struct ObjApp
 	CONST_STRPTR STR_TX_PropertiesTooltypes;
 	CONST_STRPTR STR_TX_About;
 	CONST_STRPTR GenresContent[256];
-	CONST_STRPTR CY_ScreenshotSizeContent[4];
 	CONST_STRPTR RA_TitlesFromContent[3];
 	CONST_STRPTR CY_FilterListContent[6];
 	CONST_STRPTR CY_ChipsetListContent[16];

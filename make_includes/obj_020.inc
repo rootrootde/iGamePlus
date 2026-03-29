@@ -1,5 +1,5 @@
 ##########################################################################
-# object files (generic 000)
+# object files (020)
 ##########################################################################
 
 src/funcs.o: src/funcs.c src/iGame_strings.h src/strfuncs.h src/fsfuncs.h src/iGameExtern.h src/blacklist.h

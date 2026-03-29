@@ -1,7 +1,22 @@
-## iGame VERSION_TAG - [RELEASE_DATE]
+## iGame+ v1.1.0 - [2026-03-29]
+### Added
+- Sidebar game info panel showing title, genre, developer, year, chipset, players, rating, times played
+- Togglable filter bar (T hotkey) with genre popup dropdown, group cycle, chipset cycle
+- Auto-select first game on startup
+- MorphOS and AmigaOS 4.1 build targets restored
+
+### Changed
+- Screenshots scale to fill sidebar, no more fixed screenshot size settings
+- Sidebar hidden on startup, shown when a game is selected
+- Window opens at 75% of screen height
+- Dropped 68000 and 68030 build targets
+- Build system simplified for Docker cross-compilation
+
 ### Fixed
-- Fixed the screenshots being visible for the selected entry on MorphOS (#255)
-- Fixed duplicate records in list when the repository was scanned repeatedly, and the igame.data files were used. This was surfaced only on MorphOS, but could be a potential problem on other systems as well (#265)
+- Screenshots no longer crash on PAL/NTSC HiRes screens
+- Menu hotkeys work reliably (NList no longer captures keyboard focus)
+- OS4 ExamineDir API usage corrected
+- Fixed window resizability on all screen modes
 
 ## iGame 2.6.0 - [2025-06-14]
 ### Added

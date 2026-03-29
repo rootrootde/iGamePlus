@@ -25,7 +25,7 @@
 #endif
 
 #ifndef MINOR_VERS
-#define MINOR_VERS 0
+#define MINOR_VERS 1
 #endif
 
 #ifndef PATCH_VERS

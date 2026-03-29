@@ -2,28 +2,40 @@
 
 A WHDLoad game launcher for Amiga, forked from [iGame](https://github.com/MrZammler/iGame) by Emmanuel Vasilakis.
 
-![Alt text](/igame_screen.png?raw=true "iGame screenshot")
+![iGame+ screenshot](/screenshot_github.png?raw=true "iGame+ screenshot")
 
-## What's new in iGame+
+## What's new in iGame+ (compared to iGame)
 
-### New features
-- **Configurable columns** — show/hide Year, Players, Genre, Times Played, Rating columns
-- **Drag-sortable column order** — reorder columns via drag and drop in Settings, with live preview
-- **Short Year display** — option to show 2-digit years (96 instead of 1996) to save screen space
-- **Rating column** — displays game ratings
-- **Rating filter** — type `r>8` in the filter field to show games rated 8.0+, combine with title search like `r>7.5 elite`
-- **Import ratings** — bulk-import ratings from `PROGDIR:igame.ratings` file (Actions menu)
-- **Side panel toggle** — hotkey B to show/hide the genre and chipset filter panel
-- **Favourite hotkey** — press F to toggle favourite, favourites shown in bold
-- **Hide game hotkey** — press H to hide a game from the list
-- **Hidden games management** — Unhide Selected, Unhide All, and Delete All (removes files from disk, with confirmation)
-- **Start with favourites** — option to show only favourites on launch
-- **Stale game detection** — on rescan, detects games no longer on disk and asks before removing
+### Sidebar game info panel
+- Game title, genre, developer and year displayed in the sidebar when a game is selected
+- Details panel with chipset, players, rating, times played
+- Screenshots scale to fill available sidebar space, works on all screen modes including PAL/NTSC HiRes
+- Sidebar resizable via Balance divider
 
-### Fixes
+### Filter bar
+- Togglable filter bar (hotkey T) with genre popup dropdown, group cycle, chipset cycle
+- Rating filter — type `r>8` in the filter field to show games rated 8.0+, combine with title search like `r>7.5 elite`
+
+### Column management
+- Configurable columns — show/hide Year, Players, Genre, Times Played, Rating
+- Drag-sortable column order in Settings with live preview
+- Short Year display option (96 instead of 1996) to save screen space
+
+### Game management
+- Favourite hotkey (F) — favourites shown in bold
+- Hide game hotkey (H)
+- Hidden games management — Unhide Selected, Unhide All, Delete All (with confirmation)
+- Import ratings from `PROGDIR:igame.ratings` file (Actions menu)
+- Start with favourites option
+- Stale game detection on rescan — asks before removing
+
+### Fixes and improvements
+- Screenshots no longer crash on PAL/NTSC HiRes screens
+- Menu hotkeys work reliably
 - Fixed memory leaks in CSV loading, screenshot handling, and WHDLoad execution
 - Fixed stack buffer overflows in path handling
 - Optimized linked list operations with O(1) tail insertion
+- Fixed OS4 ExamineDir API usage
 
 ## Warning
 
@@ -50,20 +62,28 @@ Available CPU targets:
 
 | Binary | Target |
 |--------|--------|
-| iGame.000 | 68000 (any Amiga) |
-| iGame.030 | 68030 (A1200, A3000, A4000) |
+| iGame | 68020 (A1200, A3000, A4000/030) |
 | iGame.040 | 68040 (A4000/040, accelerators) |
 | iGame.060 | 68060 (accelerators) |
+| iGame.MOS | MorphOS (PPC) |
+| iGame.OS4 | AmigaOS 4.1 (PPC) |
 
 Download from the [Releases](https://github.com/rootrootde/iGamePlus/releases) page.
 
 ### Compiling with Docker
 
 ```bash
-make -f Makefile.docker CPU=000    # 68000
-make -f Makefile.docker CPU=030    # 68030
+# m68k (walkero/docker4amigavbcc:latest-m68k)
+make -f Makefile.docker CPU=020    # 68020
 make -f Makefile.docker CPU=040    # 68040
 make -f Makefile.docker CPU=060    # 68060
+
+# PPC
+# walkero/docker4amigavbcc:latest-mos
+make -f Makefile.docker CPU=MOS    # MorphOS
+
+# walkero/docker4amigavbcc:latest-ppc
+make -f Makefile.docker CPU=OS4    # AmigaOS 4.1
 ```
 
 ## License

@@ -2,13 +2,13 @@
 # Makefile for iGame on Docker VBCC images.
 #-------------------------------------------------------------------------
 # To compile an iGame flat executable  using this makefile, run:
-#  make -f Makefile.docker CPU=030
-#  CPU options are 000,030,040,060,MOS,OS4
+#  make -f Makefile.docker CPU=040
+#  CPU options are 020,040,060,MOS,OS4
 #-------------------------------------------------------------------------
 ##########################################################################
 
 ##########################################################################
-# Default: Build iGame with standard optimizations and 000 support
+# Default: Build iGame with standard optimizations and 020 support
 ##########################################################################
 all: iGame
 
@@ -45,13 +45,13 @@ LINK		= vc
 CC_PPC		= vc
 LINK_PPC	= vc
 
-CPU ?= 000
+CPU ?= 020
 
 ##########################################################################
 # INCLUDES settings
 ##########################################################################
 
-ifneq (,$(filter 000 030 040 060,$(CPU)))
+ifneq (,$(filter 020 040 060,$(CPU)))
 INCLUDES += -I$(NDK32_INC) -I$(MUI50_INC)
 endif
 ifneq (,$(filter OS4,$(CPU)))
@@ -68,7 +68,7 @@ endif
 
 CFLAGS = -c -dontwarn=-1 -O2 -c99 $(VERS_FLAGS)
 
-ifneq (,$(filter 000 030 040 060,$(CPU)))
+ifneq (,$(filter 020 040 060,$(CPU)))
 CFLAGS += +aos68k -cpu=68$(CPU) -DCPU_VERS=68$(CPU)
 endif
 ifneq (,$(filter OS4,$(CPU)))
@@ -91,7 +91,7 @@ ifeq ($(DEBUG), 1)
 LIBFLAGS += -g -Bamigahunk
 endif
 
-ifneq (,$(filter 000 030 040 060,$(CPU)))
+ifneq (,$(filter 020 040 060,$(CPU)))
 LIBFLAGS += +aos68k -o
 endif
 ifneq (,$(filter OS4,$(CPU)))
@@ -203,15 +203,14 @@ ifneq ($(origin DRONE_TAG),undefined)
 	@sed -i "s/RELEASE_DATE/$(shell date "+%Y-%m-%d")/" ./CHANGELOG.md
 endif
 	@cp CHANGELOG.md iGame-$(DRONE_TAG)/
-	@if [ -f "iGame.000" ]; then cp iGame.000 iGame-$(DRONE_TAG)/iGame; fi
-	@if [ -f "iGame.030" ]; then cp iGame.030 iGame-$(DRONE_TAG)/; fi
+	@if [ -f "iGame.020" ]; then cp iGame.020 iGame-$(DRONE_TAG)/iGame; fi
 	@if [ -f "iGame.040" ]; then cp iGame.040 iGame-$(DRONE_TAG)/; fi
 	@if [ -f "iGame.060" ]; then cp iGame.060 iGame-$(DRONE_TAG)/; fi
 	@if [ -f "iGame.MOS" ]; then cp iGame.MOS iGame-$(DRONE_TAG)/; fi
 	@if [ -f "iGame.OS4" ]; then cp iGame.OS4 iGame-$(DRONE_TAG)/; fi
-	@lha -aq2o6 iGame-$(DRONE_TAG)-$(DATESTR).lha iGame-$(DRONE_TAG)/ iGame-$(DRONE_TAG).info
+	@lha -aq2o6 iGame-$(DRONE_TAG).lha iGame-$(DRONE_TAG)/ iGame-$(DRONE_TAG).info
 
 clean-release:
 	rm -rf iGame-$(DRONE_TAG)
-	rm iGame-$(DRONE_TAG)-$(DATESTR).lha
+	rm iGame-$(DRONE_TAG).lha
 	rm iGame-$(DRONE_TAG).info

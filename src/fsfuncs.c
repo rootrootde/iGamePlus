@@ -38,6 +38,7 @@
 /* System */
 #if defined(__amigaos4__)
 #define ASL_PRE_V38_NAMES
+#define DeleteFile(name) Delete(name)
 #endif
 #include <libraries/asl.h>
 
@@ -780,10 +781,11 @@ BOOL deleteDirectory(const char *path)
 		return FALSE;
 
 #if defined(__amigaos4__)
-	struct ExamineData *data = ExamineDir(NULL, dirLock, NULL);
-	if (data)
+	APTR context = ObtainDirContextTags(EX_LockInput, dirLock, TAG_DONE);
+	if (context)
 	{
-		do
+		struct ExamineData *data;
+		while ((data = ExamineDir(context)) != NULL)
 		{
 			int bufSize = sizeof(char) * MAX_PATH_SIZE;
 			char *childPath = AllocVec(bufSize, MEMF_CLEAR);
@@ -799,8 +801,8 @@ BOOL deleteDirectory(const char *path)
 				DeleteFile(childPath);
 			}
 			FreeVec(childPath);
-		} while (ExamineDir(data, dirLock, NULL));
-		FreeDosObject(DOS_EXAMINEDATA, data);
+		}
+		ReleaseDirContext(context);
 	}
 #else
 	struct FileInfoBlock *fib = AllocVec(sizeof(struct FileInfoBlock), MEMF_CLEAR);

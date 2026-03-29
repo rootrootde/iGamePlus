@@ -74,6 +74,7 @@
 #define MENU_HIDE_HOTKEY "H"
 #define MENU_FAVORITE_HOTKEY "F"
 #define MENU_SIDEPANEL_HOTKEY "B"
+#define MENU_FILTERBAR_HOTKEY "T"
 
 #define MAX_SLAVE_TITLE_SIZE 128
 #define MAX_GENRE_NAME_SIZE 32
@@ -96,9 +97,8 @@ typedef struct settings
 	int no_smart_spaces;
 	int titles_from_dirs;
 	int hide_screenshots;
-	int screenshot_width;
-	int screenshot_height;
 	int hide_side_panel;
+	int hide_filter_bar;
 	int no_guigfx;
 	int start_with_favorites;
 	int useIgameDataTitle;
@@ -208,6 +208,7 @@ enum {
 	MENU_DELETEGAME,
 	MENU_BLACKLIST,
 	MENU_TOGGLESIDEPANEL,
+	MENU_TOGGLEFILTERBAR,
 	MENU_IMPORTRATINGS,
 	MENU_LAST
 };

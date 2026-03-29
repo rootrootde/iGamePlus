@@ -119,6 +119,7 @@ static struct NewMenu MenuMainWin[] =
 	{ NM_ITEM ,  STR_ID(MSG_MNMainiGameSettings)					, 0 ,0 ,0			,(APTR)MENU_SETTINGS },
 	{ NM_ITEM ,  STR_ID(MSG_MNlabel2GameRepositories)				, 0 ,0 ,0			,(APTR)MENU_REPOSITORIES },
 	{ NM_ITEM ,  STR_ID(MSG_MNMainToggleSidepanel)					,"B",0 ,0			,(APTR)MENU_TOGGLESIDEPANEL },
+	{ NM_ITEM ,  STR_ID(MSG_MNMainToggleFilterBar)					,"T",0 ,0			,(APTR)MENU_TOGGLEFILTERBAR },
 	{ NM_ITEM ,  NM_BARLABEL										, 0 ,0 ,0			,(APTR)0 },
 	{ NM_ITEM ,  STR_ID(MSG_MNMainMUISettings)						, 0 ,0 ,0			,(APTR)MENU_MUISETTINGS },
 
@@ -366,6 +367,41 @@ HOOKPROTONH(ColumnOrderDestructFunc, LONG, APTR pool, char *entry)
 }
 MakeStaticHook(ColumnOrderDestructHook, ColumnOrderDestructFunc);
 
+/* Genre popup hooks for filter bar */
+HOOKPROTONH(GenrePopStrObjFunc, int, Object *popObject, Object *strObject)
+{
+	char *listEntry, *currentGenre;
+	get(strObject, MUIA_String_Contents, &currentGenre);
+
+	for (int i=0;;i++)
+	{
+		DoMethod(popObject, MUIM_List_GetEntry, i, &listEntry);
+		if (!listEntry)
+		{
+			set(popObject, MUIA_List_Active, MUIV_List_Active_Off);
+			break;
+		}
+		else if (!strcmp(listEntry, currentGenre))
+		{
+			set(popObject, MUIA_List_Active, i);
+			DoMethod(popObject, MUIM_List_Jump, MUIV_List_Jump_Active);
+			break;
+		}
+	}
+	return(TRUE);
+}
+MakeStaticHook(GenrePopStrObjHook, GenrePopStrObjFunc);
+
+HOOKPROTONH(GenrePopObjStrFunc, int, Object *popObject, Object *strObject)
+{
+	char *selectedGenre;
+	DoMethod(popObject, MUIM_List_GetEntry, MUIV_List_GetEntry_Active, &selectedGenre);
+	if (selectedGenre)
+		set(strObject, MUIA_String_Contents, selectedGenre);
+	return(TRUE);
+}
+MakeStaticHook(GenrePopObjStrHook, GenrePopObjStrFunc);
+
 
 struct ObjApp *CreateApp(void)
 {
@@ -379,8 +415,8 @@ struct ObjApp *CreateApp(void)
 #endif // ndef __morphos__
 
 	snprintf(version_string, sizeof(version_string),
-		"iGame+ %d.%d.%d (%s)",
-		MAJOR_VERS, MINOR_VERS, PATCH_VERS, STR(RELEASE_DATE)
+		"iGame+ %d.%d.%d",
+		MAJOR_VERS, MINOR_VERS, PATCH_VERS
 	);
 
 	snprintf(about_text, sizeof(about_text),
@@ -393,7 +429,7 @@ struct ObjApp *CreateApp(void)
 	APTR	MNMainBarLabel0, MNMainAbout;
 	APTR	MNMainBarLabel1, MNMainQuit, MNlabel2Game, MNMainProperties, MNMainIformation, MNMainOpenCurrentDir;
 	APTR	MNMainHide, MNMainToggleFavourite;
-	APTR	MNlabel2Tools, MNMainiGameSettings, MNMainToggleSidepanel;
+	APTR	MNlabel2Tools, MNMainiGameSettings, MNMainToggleSidepanel, MNMainToggleFilterBar;
 	APTR	MNlabel2GameRepositories, MNMainBarLabel2, MNMainMUISettings;
 #endif // ndef __morphos__
 
@@ -401,14 +437,13 @@ struct ObjApp *CreateApp(void)
 	// APTR	MNMainMenuDuplicate;
 	APTR	MNMainDelete;
 	APTR	GROUP_ROOT;
-	APTR	GR_Filter, LA_Filter, GR_main;
+	APTR	LA_Filter, GR_main;
 	APTR	GROUP_ROOT_2, GR_Path, GR_ReposButtons, GROUP_ROOT_3;
 	APTR	GR_AddGameTitle, LA_AddGameTitle, GR_AddGamePath, LA_AddGamePath;
 	APTR	GR_AddGameGenre, LA_AddGameGenre, Space_AddGame, GR_AddGameButtons;
 	APTR	GROUP_ROOT_4, GROUP_ROOT_Settings, GR_Settings;
 	APTR	LA_HideScreenshots, GR_Screenshots;
-	APTR	LA_NoGuiGfx, GR_ScreenshotSize, LA_ScreenshotSize;
-	APTR	Space_ScreenshotSize, GR_CustomSize, LA_Width, LA_Height, GR_Titles;
+	APTR	LA_NoGuiGfx, GR_Titles;
 	APTR	GR_TitlesFrom, Space_TitlesFrom, GR_SmartSpaces, Space_SmartSpaces;
 	APTR	LA_UseIgameDataTitle, GR_UseIgameDataTitle;
 	APTR	LA_SmartSpaces, GR_Misc, GR_Columns;
@@ -443,7 +478,6 @@ struct ObjApp *CreateApp(void)
 	MakeStaticHook(SettingTitlesFromChangedHook, setting_titles_from_changed);
 	MakeStaticHook(SettingHideScreenshotChangedHook, setting_hide_screenshot_changed);
 	MakeStaticHook(SettingNoGuiGfxChangedHook, setting_no_guigfx_changed);
-	MakeStaticHook(SettingScreenshotSizeChangedHook, setting_screenshot_size_changed);
 	MakeStaticHook(SettingsSaveHook, settings_save);
 	MakeStaticHook(SettingHideSidePanelChangedHook, setting_hide_side_panel_changed);
 	MakeStaticHook(ToggleSidePanelHook, toggle_side_panel);
@@ -454,6 +488,7 @@ struct ObjApp *CreateApp(void)
 	MakeStaticHook(ColumnToggleChangedHook, column_toggle_changed);
 	MakeStaticHook(ColumnOrderChangedHook, column_order_changed);
 	MakeStaticHook(SettingShortYearChangedHook, setting_short_year_changed);
+	MakeStaticHook(ToggleFilterBarHook, toggle_filter_bar);
 
 	if (!((object = AllocVec(sizeof(struct ObjApp), MEMF_PUBLIC | MEMF_CLEAR))))
 		return NULL;
@@ -468,12 +503,7 @@ struct ObjApp *CreateApp(void)
 	object->GenresContent[0] = (CONST_STRPTR)GetMBString(MSG_CY_PropertiesGenre0);
 	object->GenresContent[1] = NULL;
 
-	object->CY_ScreenshotSizeContent[0] = (CONST_STRPTR)GetMBString(MSG_CY_ScreenshotSize0);
-	object->CY_ScreenshotSizeContent[1] = (CONST_STRPTR)GetMBString(MSG_CY_ScreenshotSize1);
-	object->CY_ScreenshotSizeContent[2] = (CONST_STRPTR)GetMBString(MSG_CY_ScreenshotSize2);
-	object->CY_ScreenshotSizeContent[3] = NULL;
-
-	object->RA_TitlesFromContent[0] = (CONST_STRPTR)GetMBString(MSG_RA_TitlesFrom0);
+object->RA_TitlesFromContent[0] = (CONST_STRPTR)GetMBString(MSG_RA_TitlesFrom0);
 	object->RA_TitlesFromContent[1] = (CONST_STRPTR)GetMBString(MSG_RA_TitlesFrom1);
 	object->RA_TitlesFromContent[2] = NULL;
 
@@ -494,13 +524,51 @@ struct ObjApp *CreateApp(void)
 		MUIA_HelpNode, "STR_Filter",
 		End;
 
-	GR_Filter = GroupObject,
-		MUIA_HelpNode, "GR_Filter",
+	object->CY_FilterList = CycleObject,
+		MUIA_HelpNode, "CY_FilterList",
+		MUIA_Frame, MUIV_Frame_Button,
+		MUIA_Cycle_Entries, object->CY_FilterListContent,
+		End;
+
+	object->CY_ChipsetList = CycleObject,
+		MUIA_HelpNode, "CY_ChipsetList",
+		MUIA_Frame, MUIV_Frame_Button,
+		MUIA_Cycle_Entries, object->CY_ChipsetListContent,
+		End;
+
+	object->LV_GenresList = ListObject,
+		MUIA_Frame, MUIV_Frame_InputList,
+		MUIA_List_AutoVisible, TRUE,
+		End;
+
+	APTR LV_GenresPopup = ListviewObject,
+		MUIA_Listview_List, object->LV_GenresList,
+		MUIA_Listview_Input, TRUE,
+		End;
+
+	object->POP_GenreFilter = PopobjectObject,
+		MUIA_Popstring_String, object->STR_GenreFilter = StringObject,
+			MUIA_Frame, MUIV_Frame_String,
+			MUIA_String_MaxLen, MAX_GENRE_NAME_SIZE,
+			End,
+		MUIA_Popstring_Button, PopButton(MUII_PopUp),
+		MUIA_Popobject_StrObjHook, &GenrePopStrObjHook,
+		MUIA_Popobject_ObjStrHook, &GenrePopObjStrHook,
+		MUIA_Popobject_Object, LV_GenresPopup,
+		End;
+
+	object->GR_FilterBar = GroupObject,
+		MUIA_HelpNode, "GR_FilterBar",
 		MUIA_Group_Horiz, TRUE,
 		MUIA_Group_HorizSpacing, 5,
-		MUIA_Group_VertSpacing, 5,
 		Child, LA_Filter,
 		Child, object->STR_Filter,
+		Child, Label("Group:"),
+		Child, object->CY_FilterList,
+		Child, Label("Genre:"),
+		Child, object->POP_GenreFilter,
+		Child, Label("Chipset:"),
+		Child, object->CY_ChipsetList,
 		End;
 
 	object->LV_GamesList = NListviewObject,
@@ -525,80 +593,104 @@ struct ObjApp *CreateApp(void)
 		MUIA_NListview_Vert_ScrollBar,  MUIV_NListview_VSB_FullAuto,
 		End;
 
-	object->CY_FilterList = CycleObject,
-		MUIA_HelpNode, "CY_FilterList",
-		MUIA_Frame, MUIV_Frame_Button,
-		MUIA_Cycle_Entries, object->CY_FilterListContent,
-		End;
-
 	if (!current_settings->hide_screenshots) {
-
-		if (current_settings->no_guigfx) {
-			object->IM_GameImage_0 = MUI_NewObject(Dtpic_Classname,
-				MUIA_Dtpic_Name, DEFAULT_SCREENSHOT_FILE,
-				MUIA_Frame, MUIV_Frame_ImageButton,
-			TAG_DONE);
-		}
-		else {
-			object->IM_GameImage_0 = GuigfxObject,
-				MUIA_Guigfx_FileName, DEFAULT_SCREENSHOT_FILE,
-				MUIA_Guigfx_Quality, MUIV_Guigfx_Quality_Best,
-				MUIA_Guigfx_ScaleMode, NISMF_SCALEFREE | NISMF_KEEPASPECT_PICTURE,
-				MUIA_Frame, MUIV_Frame_ImageButton,
-				MUIA_FixHeight, current_settings->screenshot_height,
-				MUIA_FixWidth, current_settings->screenshot_width,
-			End;
-		}
-
+		object->IM_GameImage_0 = NULL;
 		object->GR_spacedScreenshot = HGroup, MUIA_Group_Spacing, 0,
-			Child, HSpace(0),
-			Child, object->IM_GameImage_0,
 			Child, HSpace(0),
 			End;
 	}
 
-	object->Space_Sidepanel = VSpace(1);
-
-	object->CY_ChipsetList = CycleObject,
-		MUIA_HelpNode, "CY_ChipsetList",
-		MUIA_Frame, MUIV_Frame_Button,
-		MUIA_Cycle_Entries, object->CY_ChipsetListContent,
+	// Sidebar game info panel
+	object->TX_SB_Title = TextObject,
+		MUIA_Text_PreParse, "\033b\033c",
+		MUIA_Text_Contents, "",
+		MUIA_Text_SetMin, FALSE,
 		End;
 
-	object->LV_GenresList = ListObject,
-		MUIA_Frame, MUIV_Frame_InputList,
+	object->TX_SB_Genre = TextObject,
+		MUIA_Text_PreParse, "\033c\033i",
+		MUIA_Text_Contents, "",
+		MUIA_Text_SetMin, FALSE,
 		End;
 
-	object->LV_GenresList = ListviewObject,
-		MUIA_HelpNode, "LV_GenresList",
-		MUIA_Listview_List, object->LV_GenresList,
+	object->TX_SB_ReleasedBy = TextObject,
+		MUIA_Text_PreParse, "\033c",
+		MUIA_Text_Contents, "",
+		MUIA_Text_SetMin, FALSE,
+		End;
+
+	object->TX_SB_Players = TextObject, MUIA_Text_SetMin, FALSE, MUIA_Weight, 100, End;
+	object->TX_SB_Chipset = TextObject, MUIA_Text_SetMin, FALSE, MUIA_Weight, 100, End;
+	object->TX_SB_Rating = TextObject, MUIA_Text_SetMin, FALSE, MUIA_Weight, 100, End;
+	object->TX_SB_TimesPlayed = TextObject, MUIA_Text_SetMin, FALSE, MUIA_Weight, 100, End;
+
+	object->GR_GameInfo = GroupObject,
+		MUIA_HelpNode, "GR_GameInfo",
+		MUIA_ShowMe, FALSE,
+		MUIA_Weight, 0,
+		MUIA_Group_Spacing, 0,
+		MUIA_InnerTop, 4,
+		Child, GroupObject,
+			MUIA_Frame, MUIV_Frame_Group,
+			MUIA_Group_Spacing, 0,
+			Child, object->TX_SB_Title,
+			Child, object->TX_SB_Genre,
+			Child, object->TX_SB_ReleasedBy,
+		End,
+		Child, GroupObject,
+			MUIA_Frame, MUIV_Frame_Group,
+			Child, ColGroup(4),
+				Child, TextObject,
+					MUIA_Text_PreParse, "\0338",
+					MUIA_Text_Contents, "# Plrs:",
+					MUIA_InnerLeft, 0, MUIA_InnerRight, 0,
+				End,
+				Child, object->TX_SB_Players,
+				Child, TextObject,
+					MUIA_Text_PreParse, "\0338",
+					MUIA_Text_Contents, "Chip:",
+					MUIA_InnerLeft, 0, MUIA_InnerRight, 0,
+				End,
+				Child, object->TX_SB_Chipset,
+				Child, TextObject,
+					MUIA_Text_PreParse, "\0338",
+					MUIA_Text_Contents, "Rating:",
+					MUIA_InnerLeft, 0, MUIA_InnerRight, 0,
+				End,
+				Child, object->TX_SB_Rating,
+				Child, TextObject,
+					MUIA_Text_PreParse, "\0338",
+					MUIA_Text_Contents, "Played:",
+					MUIA_InnerLeft, 0, MUIA_InnerRight, 0,
+				End,
+				Child, object->TX_SB_TimesPlayed,
+				Child, HSpace(0),
+				Child, HSpace(0),
+			End,
+		End,
 		End;
 
 	if (!current_settings->hide_screenshots) {
-
 		object->GR_sidepanel = GroupObject,
 			MUIA_HelpNode, "GR_sidepanel",
-			MUIA_Weight, 100,
+			MUIA_Weight, 50,
+			MUIA_Group_Spacing, 1,
+			Child, object->GR_GameInfo,
 			Child, object->GR_spacedScreenshot,
-			Child, object->Space_Sidepanel,
-			Child, object->CY_ChipsetList,
-			Child, object->LV_GenresList,
 			End;
 	}
 	else {
-
 		object->GR_sidepanel = GroupObject,
 			MUIA_HelpNode, "GR_sidepanel",
-			MUIA_Weight, 100,
-			Child, object->Space_Sidepanel,
-			Child, object->CY_ChipsetList,
-			Child, object->LV_GenresList,
+			MUIA_Weight, 50,
+			Child, VSpace(0),
+			Child, object->GR_GameInfo,
+			Child, VSpace(0),
 			End;
 	}
 
 	object->GR_leftpanel = GroupObject,
 		MUIA_HelpNode, "GR_leftpanel",
-		Child, object->CY_FilterList,
 		Child, object->LV_GamesList,
 		End;
 
@@ -621,6 +713,11 @@ struct ObjApp *CreateApp(void)
 		set(object->GR_sidepanel, MUIA_ShowMe, FALSE);
 	}
 
+	if (current_settings->hide_filter_bar)
+	{
+		set(object->GR_FilterBar, MUIA_ShowMe, FALSE);
+	}
+
 	object->TX_Status = TextObject,
 		MUIA_Frame, MUIV_Frame_None,
 		MUIA_Text_Contents, object->STR_TX_Status,
@@ -630,7 +727,7 @@ struct ObjApp *CreateApp(void)
 	GROUP_ROOT = GroupObject,
 		MUIA_Group_HorizSpacing, 5,
 		MUIA_Group_VertSpacing, 5,
-		Child, GR_Filter,
+		Child, object->GR_FilterBar,
 		Child, GR_main,
 		Child, object->TX_Status,
 		End;
@@ -763,6 +860,11 @@ struct ObjApp *CreateApp(void)
 		MUIA_Menuitem_Shortcut, MENU_SIDEPANEL_HOTKEY,
 		End;
 
+	MNMainToggleFilterBar = MenuitemObject,
+		MUIA_Menuitem_Title, GetMBString(MSG_MNMainToggleFilterBar),
+		MUIA_Menuitem_Shortcut, MENU_FILTERBAR_HOTKEY,
+		End;
+
 	MNMainBarLabel2 = MUI_MakeObject(MUIO_Menuitem, NM_BARLABEL, 0, 0, 0);
 
 	MNMainMUISettings = MenuitemObject,
@@ -774,6 +876,7 @@ struct ObjApp *CreateApp(void)
 		MUIA_Family_Child, MNMainiGameSettings,
 		MUIA_Family_Child, MNlabel2GameRepositories,
 		MUIA_Family_Child, MNMainToggleSidepanel,
+		MUIA_Family_Child, MNMainToggleFilterBar,
 		MUIA_Family_Child, MNMainBarLabel2,
 		MUIA_Family_Child, MNMainMUISettings,
 		End;
@@ -787,14 +890,16 @@ struct ObjApp *CreateApp(void)
 
 	object->WI_MainWindow = WindowObject,
 		MUIA_Window_ScreenTitle, version_string,
-		MUIA_Window_Title, GetMBString(MSG_WI_MainWindow),
+		MUIA_Window_Title, version_string,
 #ifndef __morphos__
 		MUIA_Window_Menustrip, strip = MUI_MakeObject(MUIO_MenustripNM, MenuMainWin, 0),
 #else
 		MUIA_Window_Menustrip, object->MN_MainMenu,
 #endif // ndef __morphos__
-		MUIA_Window_ID, MAKE_ID('0', 'I', 'G', 'A'),
+		MUIA_Window_ID, MAKE_ID('1', 'I', 'G', 'A'),
 		MUIA_Window_AppWindow, TRUE,
+		MUIA_Window_Height, MUIV_Window_Height_Screen(75),
+		MUIA_Window_ActiveObject, MUIV_Window_ActiveObject_None,
 		WindowContents, GROUP_ROOT,
 		End;
 
@@ -962,67 +1067,6 @@ struct ObjApp *CreateApp(void)
 
 	LA_NoGuiGfx = Label(GetMBString(MSG_LA_NoGuiGfx));
 
-	LA_ScreenshotSize = Label(GetMBString(MSG_LA_ScreenshotSize));
-
-	Space_ScreenshotSize = HSpace(1);
-
-	object->CY_ScreenshotSize = CycleObject,
-		MUIA_HelpNode, "CY_ScreenshotSize",
-		MUIA_Frame, MUIV_Frame_Button,
-		MUIA_Cycle_Entries, object->CY_ScreenshotSizeContent,
-		End;
-
-	GR_ScreenshotSize = GroupObject,
-		MUIA_HelpNode, "GR_ScreenshotSize",
-		MUIA_Group_Horiz, TRUE,
-		MUIA_Group_HorizSpacing, 5,
-		MUIA_Group_VertSpacing, 5,
-		Child, LA_ScreenshotSize,
-		Child, Space_ScreenshotSize,
-		Child, object->CY_ScreenshotSize,
-		End;
-
-	LA_Width = TextObject,
-		MUIA_Text_PreParse, "\033r",
-		MUIA_Text_Contents, GetMBString(MSG_LA_Width),
-		MUIA_Disabled, FALSE,
-		MUIA_InnerLeft, 0,
-		MUIA_InnerRight, 0,
-		End;
-
-	object->STR_Width = StringObject,
-		MUIA_Disabled, TRUE,
-		MUIA_Frame, MUIV_Frame_String,
-		MUIA_HelpNode, "STR_Width",
-		MUIA_String_Accept, "-0123456789",
-		End;
-
-	LA_Height = TextObject,
-		MUIA_Text_PreParse, "\033r",
-		MUIA_Text_Contents, GetMBString(MSG_LA_Height),
-		MUIA_Disabled, FALSE,
-		MUIA_InnerLeft, 0,
-		MUIA_InnerRight, 0,
-		End;
-
-	object->STR_Height = StringObject,
-		MUIA_Disabled, TRUE,
-		MUIA_Frame, MUIV_Frame_String,
-		MUIA_HelpNode, "STR_Height",
-		MUIA_String_Accept, "-0123456789",
-		End;
-
-	GR_CustomSize = GroupObject,
-		MUIA_HelpNode, "GR_CustomSize",
-		MUIA_Group_Horiz, TRUE,
-		MUIA_Group_HorizSpacing, 5,
-		MUIA_Group_VertSpacing, 5,
-		Child, LA_Width,
-		Child, object->STR_Width,
-		Child, LA_Height,
-		Child, object->STR_Height,
-		End;
-
 	GR_Screenshots = GroupObject,
 		MUIA_HelpNode, "GR_Screenshots",
 		MUIA_Frame, MUIV_Frame_Group,
@@ -1036,8 +1080,6 @@ struct ObjApp *CreateApp(void)
 		       Child, LA_NoGuiGfx,
 		       Child, object->CH_NoGuiGfx,
 		End,
-		Child, GR_ScreenshotSize,
-		Child, GR_CustomSize,
 		End;
 
 	object->RA_TitlesFrom = RadioObject,
@@ -1220,7 +1262,7 @@ struct ObjApp *CreateApp(void)
 
 	object->WI_Settings = WindowObject,
 		MUIA_Window_Title, GetMBString(MSG_WI_Settings),
-		MUIA_Window_ID, MAKE_ID('5', 'I', 'G', 'A'),
+		MUIA_Window_ID, MAKE_ID('5', 'I', 'G', 'B'),
 		WindowContents, GROUP_ROOT_Settings,
 		End;
 
@@ -1267,7 +1309,7 @@ struct ObjApp *CreateApp(void)
 		MUIM_Notify, MUIA_Application_Active, TRUE,
 		object->WI_MainWindow,
 		3,
-		MUIM_Set, MUIA_Window_ActiveObject, object->LV_GamesList
+		MUIM_Set, MUIA_Window_ActiveObject, MUIV_Window_ActiveObject_None
 	);
 
 	DoMethod(object->App,
@@ -1281,7 +1323,7 @@ struct ObjApp *CreateApp(void)
 		MUIM_Notify, MUIA_Application_Iconified, FALSE,
 		object->WI_MainWindow,
 		3,
-		MUIM_Set, MUIA_Window_ActiveObject, object->LV_GamesList
+		MUIM_Set, MUIA_Window_ActiveObject, MUIV_Window_ActiveObject_None
 	);
 
 	DoMethod(MNMainOpenList,
@@ -1323,7 +1365,7 @@ struct ObjApp *CreateApp(void)
 		MUIM_Notify, MUIA_Window_Activate, TRUE,
 		object->WI_MainWindow,
 		3,
-		MUIM_Set, MUIA_Window_ActiveObject, object->LV_GamesList
+		MUIM_Set, MUIA_Window_ActiveObject, MUIV_Window_ActiveObject_None
 	);
 
 	DoMethod(object->WI_MainWindow,
@@ -1374,23 +1416,39 @@ struct ObjApp *CreateApp(void)
 	);
 
 	DoMethod(object->LV_GamesList,
+		MUIM_Notify, MUIA_NList_Active, MUIV_EveryTime,
+		object->WI_MainWindow,
+		3,
+		MUIM_Set, MUIA_Window_ActiveObject, MUIV_Window_ActiveObject_None
+	);
+
+	DoMethod(object->LV_GamesList,
 		MUIM_Notify, MUIA_NList_DoubleClick, TRUE,
 		object->LV_GamesList,
 		2,
 		MUIM_CallHook, &LaunchGameHook
 	);
 
-	DoMethod(object->LV_GenresList,
-		MUIM_Notify, MUIA_List_Active, MUIV_EveryTime,
-		MUIV_Notify_Self,
+	DoMethod(object->STR_GenreFilter,
+		MUIM_Notify, MUIA_String_Contents, MUIV_EveryTime,
+		object->App,
 		2,
 		MUIM_CallHook, &GenreClickHook
 	);
 
+	DoMethod(object->LV_GenresList,
+		MUIM_Notify, MUIA_List_Active, MUIV_EveryTime,
+		object->POP_GenreFilter,
+		2,
+		MUIM_Popstring_Close, TRUE
+	);
+
 	DoMethod(object->WI_MainWindow,
 		MUIM_Window_SetCycleChain, object->STR_Filter,
+		object->CY_FilterList,
+		object->STR_GenreFilter,
+		object->CY_ChipsetList,
 		object->LV_GamesList,
-		object->LV_GenresList,
 		0
 	);
 
@@ -1504,26 +1562,6 @@ struct ObjApp *CreateApp(void)
 		MUIM_CallHook, &SettingHideScreenshotChangedHook
 	);
 
-	DoMethod(object->CH_Screenshots,
-		MUIM_Notify, MUIA_Selected, TRUE,
-		GR_ScreenshotSize,
-		3,
-		MUIM_Set, MUIA_Disabled, TRUE
-	);
-
-	DoMethod(object->CH_Screenshots,
-		MUIM_Notify, MUIA_Selected, FALSE,
-		GR_ScreenshotSize,
-		3,
-		MUIM_Set, MUIA_Disabled, FALSE
-	);
-
-	DoMethod(object->CH_Screenshots,
-		MUIM_Notify, MUIA_Selected, FALSE,
-		GR_CustomSize,
-		3,
-		MUIM_Set, MUIA_Disabled, FALSE
-	);
 
 	DoMethod(object->CH_NoGuiGfx,
 		MUIM_Notify, MUIA_Selected, MUIV_EveryTime,
@@ -1532,12 +1570,6 @@ struct ObjApp *CreateApp(void)
 		MUIM_CallHook, &SettingNoGuiGfxChangedHook
 	);
 
-	DoMethod(object->CY_ScreenshotSize,
-		MUIM_Notify, MUIA_Cycle_Active, MUIV_EveryTime,
-		object->App,
-		2,
-		MUIM_CallHook, &SettingScreenshotSizeChangedHook
-	);
 
 	DoMethod(object->RA_TitlesFrom,
 		MUIM_Notify, MUIA_Radio_Active, MUIV_EveryTime,
@@ -1640,9 +1672,6 @@ struct ObjApp *CreateApp(void)
 	DoMethod(object->WI_Settings,
 		MUIM_Window_SetCycleChain, object->CH_Screenshots,
 		object->CH_NoGuiGfx,
-		object->CY_ScreenshotSize,
-		object->STR_Width,
-		object->STR_Height,
 		object->RA_TitlesFrom,
 		object->CH_SmartSpaces,
 		object->CH_UseIgameDataTitle,
@@ -1770,6 +1799,13 @@ struct ObjApp *CreateApp(void)
 		object->App,
 		2,
 		MUIM_Application_ReturnID, MENU_TOGGLESIDEPANEL
+	);
+
+	DoMethod(MNMainToggleFilterBar,
+		MUIM_Notify, MUIA_Menuitem_Trigger, MUIV_EveryTime,
+		object->App,
+		2,
+		MUIM_Application_ReturnID, MENU_TOGGLEFILTERBAR
 	);
 #endif
 

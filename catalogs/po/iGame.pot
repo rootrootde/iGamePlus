@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: http://URL/\n"
-"POT-Creation-Date: 2026-03-21 16:44+0000\n"
+"POT-Creation-Date: 2026-03-26 19:29+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -594,4 +594,24 @@ msgstr ""
 
 msgctxt "MSG_BT_ColumnToggle (//)"
 msgid "Toggle"
+msgstr ""
+
+msgctxt "MSG_LA_ShortYear (//)"
+msgid "Short Year"
+msgstr ""
+
+msgctxt "MSG_BT_BlacklistDeleteAll (//)"
+msgid "Delete All"
+msgstr ""
+
+msgctxt "MSG_MNMainImportRatings (//)"
+msgid "Import Ratings..."
+msgstr ""
+
+msgctxt "MSG_ImportRatingsComplete (//)"
+msgid "Imported ratings for %d games."
+msgstr ""
+
+msgctxt "MSG_ImportRatingsFileNotFound (//)"
+msgid "Ratings file not found!"
 msgstr ""

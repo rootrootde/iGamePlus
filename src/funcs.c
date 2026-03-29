@@ -204,27 +204,6 @@ static void apply_settings()
 	set(app->CH_Screenshots, MUIA_Selected, current_settings->hide_screenshots);
 	set(app->CH_NoGuiGfx, MUIA_Selected, current_settings->no_guigfx);
 
-	if (current_settings->screenshot_width == 160 && current_settings->screenshot_height == 128)
-	{
-		set(app->CY_ScreenshotSize, MUIA_Cycle_Active, 0);
-		set(app->STR_Width, MUIA_Disabled, TRUE);
-		set(app->STR_Height, MUIA_Disabled, TRUE);
-	}
-	else if (current_settings->screenshot_width == 320 && current_settings->screenshot_height == 256)
-	{
-		set(app->CY_ScreenshotSize, MUIA_Cycle_Active, 1);
-		set(app->STR_Width, MUIA_Disabled, TRUE);
-		set(app->STR_Height, MUIA_Disabled, TRUE);
-	}
-	else
-	{
-		set(app->CY_ScreenshotSize, MUIA_Cycle_Active, 2);
-		set(app->STR_Width, MUIA_Disabled, FALSE);
-		set(app->STR_Height, MUIA_Disabled, FALSE);
-		set(app->STR_Width, MUIA_String_Integer, current_settings->screenshot_width);
-		set(app->STR_Height, MUIA_String_Integer, current_settings->screenshot_height);
-	}
-
 	set(app->RA_TitlesFrom, MUIA_Radio_Active, current_settings->titles_from_dirs);
 	if (current_settings->titles_from_dirs)
 	{
@@ -253,22 +232,21 @@ static void setDefaultSettings(igame_settings *settings)
 	current_settings->no_guigfx				= TRUE;
 	current_settings->filter_use_enter		= TRUE;
 	current_settings->hide_side_panel		= FALSE;
+	current_settings->hide_filter_bar		= FALSE;
 	current_settings->save_stats_on_exit	= TRUE;
 	current_settings->no_smart_spaces		= FALSE;
 	current_settings->useIgameDataTitle		= TRUE;
 	current_settings->titles_from_dirs		= TRUE;
-	current_settings->hide_screenshots		= TRUE;
-	current_settings->screenshot_width		= 160;
-	current_settings->screenshot_height		= 128;
+	current_settings->hide_screenshots		= FALSE;
 	current_settings->start_with_favorites	= FALSE;
 	current_settings->show_column_year		= TRUE;
-	current_settings->show_column_players	= TRUE;
-	current_settings->show_column_genre		= FALSE;
+	current_settings->show_column_players	= FALSE;
+	current_settings->show_column_genre		= TRUE;
 	current_settings->show_column_times_played = FALSE;
 	current_settings->show_column_rating	= FALSE;
-	current_settings->column_order[0]		= COL_YEAR;
-	current_settings->column_order[1]		= COL_PLAYERS;
-	current_settings->column_order[2]		= COL_GENRE;
+	current_settings->column_order[0]		= COL_GENRE;
+	current_settings->column_order[1]		= COL_YEAR;
+	current_settings->column_order[2]		= COL_PLAYERS;
 	current_settings->column_order[3]		= COL_TIMES_PLAYED;
 	current_settings->column_order[4]		= COL_RATING;
 	current_settings->short_year			= FALSE;
@@ -326,8 +304,8 @@ igame_settings *load_settings(const char* filename)
 					break;
 
 				int len = strlen(file_line);
-				if (len > 0) file_line[--len] = '\0';
-				if (len == 0)
+				if (len > 0 && file_line[len - 1] == '\n') file_line[--len] = '\0';
+				if (len == 0 || file_line[0] == ';' || file_line[0] == '#')
 					continue;
 
 				if (!strncmp(file_line, "no_guigfx=", 10))
@@ -336,6 +314,8 @@ igame_settings *load_settings(const char* filename)
 					current_settings->filter_use_enter = atoi((const char*)file_line + 17);
 				if (!strncmp(file_line, "hide_side_panel=", 16))
 					current_settings->hide_side_panel = atoi((const char*)file_line + 16);
+				if (!strncmp(file_line, "hide_filter_bar=", 16))
+					current_settings->hide_filter_bar = atoi((const char*)file_line + 16);
 				if (!strncmp(file_line, "save_stats_on_exit=", 19))
 					current_settings->save_stats_on_exit = atoi((const char*)file_line + 19);
 				if (!strncmp(file_line, "no_smart_spaces=", 16))
@@ -344,10 +324,6 @@ igame_settings *load_settings(const char* filename)
 					current_settings->titles_from_dirs = atoi((const char*)file_line + 17);
 				if (!strncmp(file_line, "hide_screenshots=", 17))
 					current_settings->hide_screenshots = atoi((const char*)file_line + 17);
-				if (!strncmp(file_line, "screenshot_width=", 17))
-					current_settings->screenshot_width = atoi((const char*)file_line + 17);
-				if (!strncmp(file_line, "screenshot_height=", 18))
-					current_settings->screenshot_height = atoi((const char*)file_line + 18);
 				if (!strncmp(file_line, "start_with_favorites=", 21))
 					current_settings->start_with_favorites = atoi((const char*)file_line + 21);
 				if (!strncmp(file_line, "use_igame.data_title=", 21))
@@ -449,7 +425,7 @@ static void load_repos(const char* filename)
 
 static void populateGenresLists(void)
 {
-	if (!current_settings->hide_side_panel)
+	if (!current_settings->hide_filter_bar)
 	{
 		nnset(app->LV_GenresList, MUIA_List_Quiet, TRUE);
 
@@ -466,7 +442,7 @@ static void populateGenresLists(void)
 	int cnt = 0;
 	while (currPtr != NULL)
 	{
-		if (!current_settings->hide_side_panel)
+		if (!current_settings->hide_filter_bar)
 		{
 			DoMethod(app->LV_GenresList, MUIM_List_InsertSingle, currPtr->title, MUIV_List_Insert_Bottom);
 		}
@@ -483,7 +459,7 @@ static void populateGenresLists(void)
 	app->GenresContent[cnt++] = NULL;
 
 	nnset(app->CY_AddGameGenre, MUIA_Cycle_Entries, app->GenresContent);
-	if (!current_settings->hide_side_panel)
+	if (!current_settings->hide_filter_bar)
 	{
 		nnset(app->LV_GenresList, MUIA_List_Active, MUIV_List_Active_Top);
 		nnset(app->LV_GenresList, MUIA_List_Quiet, FALSE);
@@ -543,13 +519,21 @@ void app_start(void)
 	blacklistLoad(DEFAULT_BLACKLIST_FILE);
 
 	populateGenresLists(); // This calls the filter_change()
-	if (!current_settings->hide_side_panel)
+	if (!current_settings->hide_filter_bar)
 	{
 		populateChipsetList();
 	}
 	filter_change();
 	set(app->WI_MainWindow, MUIA_Window_Sleep, FALSE);
-	set(app->WI_MainWindow, MUIA_Window_ActiveObject, app->LV_GamesList);
+	set(app->WI_MainWindow, MUIA_Window_ActiveObject, MUIV_Window_ActiveObject_None);
+
+	// Select first game to populate sidebar and enable window resizing
+	LONG entries = xget(app->LV_GamesList, MUIA_NList_Entries);
+	if (entries > 0)
+	{
+		set(app->LV_GamesList, MUIA_NList_Active, 0);
+		game_click();
+	}
 }
 
 void filter_change(void)
@@ -589,17 +573,19 @@ void filter_change(void)
 	}
 	else filters.title[0] = '\0';
 
-	if (!current_settings->hide_side_panel)
+	if (!current_settings->hide_filter_bar)
 	{
-		DoMethod(app->LV_GenresList, MUIM_List_GetEntry,
-			MUIV_List_GetEntry_Active, &genreSelection);
+		get(app->STR_GenreFilter, MUIA_String_Contents, &genreSelection);
 
-		if (genreSelection)
+		if (genreSelection && strlen(genreSelection) > 0)
 			strncpy(filters.showGenre, genreSelection, sizeof(filters.showGenre));
 
-		if (!genreSelection || !strcmp(genreSelection, GetMBString(MSG_FilterShowAll)))
+		if (!genreSelection || strlen(genreSelection) == 0 || !strcmp(genreSelection, GetMBString(MSG_FilterShowAll)))
 			filters.showGenre[0] = '\0';
+	}
 
+	if (!current_settings->hide_filter_bar)
+	{
 		// Get selected chipset from the cycle box
 		int chipsetIndex = get_cycle_index(app->CY_ChipsetList);
 		strncpy(filters.showChipset, app->CY_ChipsetListContent[chipsetIndex], sizeof(filters.showChipset));
@@ -1317,7 +1303,7 @@ void scan_repositories(void)
 		showSlavesList();
 
 		// Clear the genres lists before populating them again
-		if (!current_settings->hide_side_panel)
+		if (!current_settings->hide_filter_bar)
 		{
 			DoMethod(app->LV_GenresList, MUIM_List_Clear);
 		}
@@ -1335,44 +1321,21 @@ static void applySidePanelChange(void)
 	if (!current_settings->hide_side_panel)
 	{
 		DoMethod(app->GR_sidepanel, MUIM_Group_InitChange);
-		DoMethod(app->GR_sidepanel, OM_REMMEMBER, app->Space_Sidepanel);
-		DoMethod(app->GR_sidepanel, OM_REMMEMBER, app->CY_ChipsetList);
-		DoMethod(app->GR_sidepanel, OM_REMMEMBER, app->LV_GenresList);
+
+		DoMethod(app->GR_sidepanel, OM_REMMEMBER, app->GR_GameInfo);
+		if (app->GR_spacedScreenshot)
+			DoMethod(app->GR_sidepanel, OM_REMMEMBER, app->GR_spacedScreenshot);
+
+		DoMethod(app->GR_sidepanel, OM_ADDMEMBER, app->GR_GameInfo);
 
 		if (!current_settings->hide_screenshots) {
-			if (current_settings->no_guigfx) {
-				app->IM_GameImage_0 = MUI_NewObject(Dtpic_Classname,
-					MUIA_Dtpic_Name, DEFAULT_SCREENSHOT_FILE,
-					MUIA_Frame, MUIV_Frame_ImageButton,
-				TAG_DONE);
-			}
-			else {
-				app->IM_GameImage_0 = GuigfxObject,
-					MUIA_Guigfx_FileName, DEFAULT_SCREENSHOT_FILE,
-					MUIA_Guigfx_Quality, MUIV_Guigfx_Quality_Best,
-					MUIA_Guigfx_ScaleMode, NISMF_SCALEFREE | NISMF_KEEPASPECT_PICTURE,
-					MUIA_Frame, MUIV_Frame_ImageButton,
-					MUIA_FixHeight, current_settings->screenshot_height,
-					MUIA_FixWidth, current_settings->screenshot_width,
-				End;
-			}
-
-			DoMethod(app->GR_sidepanel, OM_REMMEMBER, app->GR_spacedScreenshot);
+			app->IM_GameImage_0 = NULL;
 			app->GR_spacedScreenshot = HGroup, MUIA_Group_Spacing, 0,
-				Child, HSpace(0),
-				Child, app->IM_GameImage_0,
 				Child, HSpace(0),
 				End;
 			DoMethod(app->GR_sidepanel, OM_ADDMEMBER, app->GR_spacedScreenshot);
 		}
-		else
-		{
-			DoMethod(app->GR_sidepanel, OM_REMMEMBER, app->GR_spacedScreenshot);
-		}
 
-		DoMethod(app->GR_sidepanel, OM_ADDMEMBER, app->Space_Sidepanel);
-		DoMethod(app->GR_sidepanel, OM_ADDMEMBER, app->CY_ChipsetList);
-		DoMethod(app->GR_sidepanel, OM_ADDMEMBER, app->LV_GenresList);
 		DoMethod(app->GR_sidepanel, MUIM_Group_ExitChange);
 	}
 	sidepanelChanged = FALSE;
@@ -1390,9 +1353,7 @@ static void replaceScreenshot(void)
 		DoMethod(app->GR_spacedScreenshot, OM_REMMEMBER, child);
 		MUI_DisposeObject(child);
 	}
-	DoMethod(app->GR_spacedScreenshot, OM_ADDMEMBER, HSpace(0));
 	DoMethod(app->GR_spacedScreenshot, OM_ADDMEMBER, app->IM_GameImage_0 = app->IM_GameImage_1);
-	DoMethod(app->GR_spacedScreenshot, OM_ADDMEMBER, HSpace(0));
 	DoMethod(app->GR_spacedScreenshot, MUIM_Group_ExitChange);
 }
 
@@ -1417,8 +1378,6 @@ static void show_screenshot(STRPTR screenshot_path)
 						MUIA_Guigfx_ScaleMode,			NISMF_SCALEFREE | NISMF_KEEPASPECT_PICTURE,
 						MUIA_Guigfx_Transparency,		0,
 						MUIA_Frame, 					MUIV_Frame_ImageButton,
-						MUIA_FixHeight, 				current_settings->screenshot_height,
-						MUIA_FixWidth, 					current_settings->screenshot_width,
 			End;
 		}
 
@@ -1477,15 +1436,65 @@ static void showDefaultScreenshot(void)
 	show_screenshot(DEFAULT_SCREENSHOT_FILE);
 }
 
+static void populate_sidebar_igamedata(slavesList *node)
+{
+	char developer[64] = "";
+	char devYear[80];
+
+	char parentPath[MAX_PATH_SIZE];
+	char igameDataPath[MAX_PATH_SIZE];
+	getParentPath(node->path, parentPath, sizeof(parentPath));
+	snprintf(igameDataPath, sizeof(igameDataPath), "%s/%s", parentPath, DEFAULT_IGAMEDATA_FILE);
+
+	if (check_path_exists(igameDataPath))
+	{
+		const BPTR fp = Open(igameDataPath, MODE_OLDFILE);
+		if (fp)
+		{
+			char line[64];
+			while (FGets(fp, line, sizeof(line)) != NULL)
+			{
+				char **tokens = str_split(line, '=');
+				if (tokens && tokens[1] != NULL)
+				{
+					int len = strlen(tokens[1]);
+					if (len > 0 && tokens[1][len - 1] == '\n')
+						tokens[1][len - 1] = '\0';
+
+					if (!strcmp(tokens[0], "by") && !isStringEmpty(tokens[1]))
+						strncpy(developer, tokens[1], sizeof(developer) - 1);
+
+					for (int i = 0; *(tokens + i); i++)
+						free(*(tokens + i));
+					free(tokens);
+				}
+			}
+			Close(fp);
+		}
+	}
+
+	if (developer[0] && node->year > 0)
+		snprintf(devYear, sizeof(devYear), "%s, %d", developer, node->year);
+	else if (developer[0])
+		snprintf(devYear, sizeof(devYear), "%s", developer);
+	else if (node->year > 0)
+		snprintf(devYear, sizeof(devYear), "%d", node->year);
+	else
+		devYear[0] = '\0';
+
+	set(app->TX_SB_ReleasedBy, MUIA_Text_Contents, devYear);
+}
+
 void game_click(void)
 {
-	if (current_settings->hide_side_panel || current_settings->hide_screenshots)
-		return;
-
 	char *game_title = NULL;
 	DoMethod(app->LV_GamesList, MUIM_NList_GetEntry, MUIV_NList_GetEntry_Active, &game_title);
 
-	if (game_title)
+	if (!game_title)
+		return;
+
+	// Screenshot loading
+	if (!current_settings->hide_side_panel && !current_settings->hide_screenshots)
 	{
 		strncpy(pending_screenshot_title, game_title,
 				MAX_SLAVE_TITLE_SIZE - 1);
@@ -1493,6 +1502,44 @@ void game_click(void)
 		screenshot_pending = TRUE;
 		screenshot_cooldown = SCREENSHOT_COOLDOWN_TICKS;
 	}
+
+	// Sidebar game info
+	if (current_settings->hide_side_panel)
+		return;
+
+	// Show sidebar game info (hidden on startup)
+	set(app->GR_GameInfo, MUIA_ShowMe, TRUE);
+
+	slavesList *node = slavesListSearchByTitle(game_title, sizeof(char) * MAX_SLAVE_TITLE_SIZE);
+	if (!node)
+		return;
+
+	setSlavesListBuffer(node);
+
+	// Display-only fields
+	char tmpStr[16];
+
+	if (!isStringEmpty(node->user_title))
+		set(app->TX_SB_Title, MUIA_Text_Contents, node->user_title);
+	else
+		set(app->TX_SB_Title, MUIA_Text_Contents, node->title);
+
+	snprintf(tmpStr, sizeof(tmpStr), "%dx", node->times_played);
+	set(app->TX_SB_TimesPlayed, MUIA_Text_Contents, tmpStr);
+
+	set(app->TX_SB_Genre, MUIA_Text_Contents, node->genre);
+
+	if (node->players > 0)
+		snprintf(tmpStr, sizeof(tmpStr), "%d", node->players);
+	else
+		tmpStr[0] = '\0';
+	set(app->TX_SB_Players, MUIA_Text_Contents, tmpStr);
+
+	set(app->TX_SB_Chipset, MUIA_Text_Contents, node->chipset);
+	set(app->TX_SB_Rating, MUIA_Text_Contents, node->rating);
+
+	// igame.data: developer, links
+	populate_sidebar_igamedata(node);
 }
 
 static void screenshot_load(void)
@@ -1914,58 +1961,12 @@ void setting_no_guigfx_changed(void)
 	current_settings->no_guigfx = (BOOL)xget(app->CH_NoGuiGfx, MUIA_Selected);
 }
 
-void setting_screenshot_size_changed(void)
-{
-	const int index = get_cycle_index(app->CY_ScreenshotSize);
-
-	// Index=0 -> 160x128
-	// Index=1 -> 320x256
-	// Index=2 -> Custom size
-
-	if (index == 0)
-	{
-		set(app->STR_Width, MUIA_Disabled, TRUE);
-		set(app->STR_Height, MUIA_Disabled, TRUE);
-		current_settings->screenshot_width = 160;
-		current_settings->screenshot_height = 128;
-		return;
-	}
-
-	if (index == 1)
-	{
-		set(app->STR_Width, MUIA_Disabled, TRUE);
-		set(app->STR_Height, MUIA_Disabled, TRUE);
-		current_settings->screenshot_width = 320;
-		current_settings->screenshot_height = 256;
-		return;
-	}
-
-	if (index == 2)
-	{
-		set(app->STR_Width, MUIA_Disabled, FALSE);
-		set(app->STR_Height, MUIA_Disabled, FALSE);
-	}
-}
-
 void settings_use(void)
 {
 	if (current_settings == NULL)
 		return;
 
 	sync_column_order_from_list();
-
-	const int index = get_cycle_index(app->CY_ScreenshotSize);
-	if (index == 2)
-	{
-		char *width = NULL;
-		char *height = NULL;
-
-		get(app->STR_Width, MUIA_String_Contents, &width);
-		get(app->STR_Height, MUIA_String_Contents, &height);
-
-		current_settings->screenshot_width = atoi(width);
-		current_settings->screenshot_height = atoi(height);
-	}
 
 	if (sidepanelChanged)
 		applySidePanelChange();
@@ -2000,13 +2001,12 @@ void settings_save(void)
 	pos += snprintf(file_line + pos, buffer_size - pos, "no_guigfx=%d\n", current_settings->no_guigfx);
 	pos += snprintf(file_line + pos, buffer_size - pos, "filter_use_enter=%d\n", current_settings->filter_use_enter);
 	pos += snprintf(file_line + pos, buffer_size - pos, "hide_side_panel=%d\n", current_settings->hide_side_panel);
+	pos += snprintf(file_line + pos, buffer_size - pos, "hide_filter_bar=%d\n", current_settings->hide_filter_bar);
 	pos += snprintf(file_line + pos, buffer_size - pos, "start_with_favorites=%d\n", current_settings->start_with_favorites);
 	pos += snprintf(file_line + pos, buffer_size - pos, "save_stats_on_exit=%d\n", current_settings->save_stats_on_exit);
 	pos += snprintf(file_line + pos, buffer_size - pos, "no_smart_spaces=%d\n", current_settings->no_smart_spaces);
 	pos += snprintf(file_line + pos, buffer_size - pos, "titles_from_dirs=%d\n", current_settings->titles_from_dirs);
 	pos += snprintf(file_line + pos, buffer_size - pos, "hide_screenshots=%d\n", current_settings->hide_screenshots);
-	pos += snprintf(file_line + pos, buffer_size - pos, "screenshot_width=%d\n", current_settings->screenshot_width);
-	pos += snprintf(file_line + pos, buffer_size - pos, "screenshot_height=%d\n", current_settings->screenshot_height);
 	pos += snprintf(file_line + pos, buffer_size - pos, "use_igame.data_title=%d\n", current_settings->useIgameDataTitle);
 	pos += snprintf(file_line + pos, buffer_size - pos, "last_scan_setup=%d\n", current_settings->lastScanSetup);
 	pos += snprintf(file_line + pos, buffer_size - pos, "show_column_year=%d\n", current_settings->show_column_year);
@@ -2043,18 +2043,18 @@ void toggle_side_panel(void)
 
 	if (!current_settings->hide_side_panel)
 	{
-		LONG count = 0;
-		get(app->LV_GenresList, MUIA_List_Entries, &count);
-		if (count == 0)
-		{
-			populateGenresLists();
-			populateChipsetList();
-		}
 		game_click();
 	}
 
 	nnset(app->CH_HideSidepanel, MUIA_Selected, current_settings->hide_side_panel);
 }
+
+void toggle_filter_bar(void)
+{
+	current_settings->hide_filter_bar = !current_settings->hide_filter_bar;
+	set(app->GR_FilterBar, MUIA_ShowMe, !current_settings->hide_filter_bar);
+}
+
 
 void setting_start_with_favorites_changed(void)
 {
@@ -2550,7 +2550,7 @@ void saveItemInformation(void)
 	genresList *newGenrePtr = addGenreInList(buf);
 	if (newGenrePtr != NULL)
 	{
-		if (!current_settings->hide_side_panel)
+		if (!current_settings->hide_filter_bar)
 		{
 			DoMethod(app->LV_GenresList, MUIM_List_InsertSingle, newGenrePtr->title, MUIV_List_Insert_Sorted);
 		}

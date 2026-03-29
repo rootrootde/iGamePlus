@@ -3,8 +3,5 @@
 ##########################################################################
 
 OBJS		= src/funcs.o src/iGameGUI.o src/iGameMain.o src/strfuncs.o src/fsfuncs.o src/blacklist.o src/WinBlacklist.o
-OBJS_030	= src/funcs_030.o src/iGameGUI_030.o src/iGameMain_030.o src/strfuncs_030.o src/fsfuncs_030.o src/blacklist_030.o src/WinBlacklist_030.o
 OBJS_040	= src/funcs_040.o src/iGameGUI_040.o src/iGameMain_040.o src/strfuncs_040.o src/fsfuncs_040.o src/blacklist_040.o src/WinBlacklist_040.o
 OBJS_060	= src/funcs_060.o src/iGameGUI_060.o src/iGameMain_060.o src/strfuncs_060.o src/fsfuncs_060.o src/blacklist_060.o src/WinBlacklist_060.o
-OBJS_MOS	= src/funcs_MOS.o src/iGameGUI_MOS.o src/iGameMain_MOS.o src/strfuncs_MOS.o src/fsfuncs_MOS.o src/blacklist_MOS.o src/WinBlacklist_MOS.o
-OBJS_OS4	= src/funcs_OS4.o src/iGameGUI_OS4.o src/iGameMain_OS4.o src/strfuncs_OS4.o src/fsfuncs_OS4.o src/blacklist_OS4.o src/WinBlacklist_OS4.o

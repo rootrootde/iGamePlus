@@ -212,6 +212,10 @@ int main(int argc, char **argv)
 				toggle_side_panel();
 				break;
 
+			case MENU_TOGGLEFILTERBAR:
+				toggle_filter_bar();
+				break;
+
 			case MENU_SETTINGS:
 				set(app->WI_Settings, MUIA_Window_Open, TRUE);
 				break;
