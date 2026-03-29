@@ -11,6 +11,9 @@ src/iGame_strings.h
 iGame-v*/
 iGame-v*.lha
 iGame-v*.info
+iGamePlus-v*/
+iGamePlus-v*.lha
+iGamePlus-v*.info
 iGame_rel/
 
 # runtime files
