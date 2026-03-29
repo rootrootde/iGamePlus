@@ -47,6 +47,9 @@
 #include "fsfuncs.h"
 #include "funcs.h"
 #include "iGameGUI.h"
+#include "screenshot.h"
+#include "settings.h"
+#include "columns.h"
 
 /* Increase stack size */
 #if defined(__amigaos4__)

@@ -26,9 +26,6 @@
 
 void msg_box(const char *);
 void game_click(void);
-void screenshot_update(void);
-void screenshot_tick(void);
-BOOL screenshot_is_pending(void);
 void joystick_input(ULONG);
 void joystick_direction_repeat(ULONG);
 void app_stop(void);
@@ -52,29 +49,13 @@ void non_whdload_ok(void);
 void repo_stop(void);
 void repo_add(void);
 void repo_remove(void);
-void setting_filter_use_enter_changed(void);
-void setting_save_stats_on_exit_changed(void);
-void setting_smart_spaces_changed(void);
-void setting_titles_from_changed(void);
-void setting_hide_screenshot_changed(void);
-void setting_no_guigfx_changed(void);
-void settings_save(void);
-void setting_hide_side_panel_changed(void);
 void toggle_side_panel(void);
 void toggle_filter_bar(void);
-void setting_start_with_favorites_changed(void);
-void settings_use(void);
-void setting_use_igamedata_title_changed(void);
-igame_settings *load_settings(const char *);
 void get_item_information(void);
 void save_item_information(void);
-void column_toggle_changed(void);
-void column_order_changed(void);
-void populate_column_order_list(void);
-void sync_column_order_from_list(void);
-void setting_short_year_changed(void);
-void apply_column_settings(void);
-int is_column_visible(int col);
 void import_ratings(void);
+void set_status_text(char *);
+void apply_side_panel_change(void);
+void set_last_scan_bitfield(void);
 
 #endif

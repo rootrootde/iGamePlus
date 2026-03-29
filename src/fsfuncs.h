@@ -41,7 +41,7 @@ void get_icon_tooltypes(char *, char *);
 void set_icon_tooltypes(char *, char *);
 BOOL check_slave_in_tooltypes(char *, char *);
 void prepare_whd_execution(char *, char *);
-void getIGameDataInfo(char *, slavesList *);
+void get_igame_data_info(char *, slavesList *);
 void load_genres_from_file(void);
 BOOL delete_directory(const char *);
 BOOL is_path_on_assign(const char *);

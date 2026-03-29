@@ -698,7 +698,7 @@ void prepare_whd_execution(char *infoFile, char *result)
 	FreeVec(tooltypes);
 }
 
-void getIGameDataInfo(char *igameDataPath, slavesList *node)
+void get_igame_data_info(char *igameDataPath, slavesList *node)
 {
 	const BPTR fpigamedata = Open(igameDataPath, MODE_OLDFILE);
 	if (fpigamedata)

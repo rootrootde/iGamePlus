@@ -72,6 +72,8 @@
 #include "WinProps.h"
 #include "WinAbout.h"
 #include "WinBlacklist.h"
+#include "settings.h"
+#include "columns.h"
 
 extern int visible_columns[];
 extern int num_visible_columns;

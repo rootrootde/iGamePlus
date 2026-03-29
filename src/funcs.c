@@ -62,6 +62,9 @@
 #include "chipsetList.h"
 #include "blacklist.h"
 #include "funcs.h"
+#include "screenshot.h"
+#include "settings.h"
+#include "columns.h"
 
 extern struct ObjApp* app;
 extern struct Library *IconBase;
@@ -71,17 +74,10 @@ extern char* executable_name;
 char fname[255];
 BOOL sidepanelChanged = FALSE; // This is temporary until settings are revamped
 
-/* screenshot debounce state */
-static BOOL screenshot_pending = FALSE;
-static char pending_screenshot_title[MAX_SLAVE_TITLE_SIZE];
-static int screenshot_cooldown = 0;
-#define SCREENSHOT_COOLDOWN_TICKS 5 /* ~100ms at 50Hz (Delay(1) per tick) */
-
 /* function definitions */
-static int get_cycle_index(Object *);
 static void show_slaves_list(void);
 static LONG xget(Object *, ULONG);
-static void set_last_scan_bitfield(void);
+static int get_cycle_index(Object *);
 static int msg_box_confirm(const char *);
 
 // Parse a rating string like "8.79" into an integer 879 (value * 100)
@@ -113,262 +109,9 @@ repos_list *item_repos = NULL, *repos = NULL;
 igame_settings *current_settings = NULL;
 listFilters filters = {0};
 
-int visible_columns[COL_MAX];
-int num_visible_columns = 0;
-
 void set_status_text(char *text)
 {
 	set(app->TX_Status, MUIA_Text_Contents, text);
-}
-
-int is_column_visible(int col)
-{
-	switch (col)
-	{
-		case COL_YEAR: return current_settings->show_column_year;
-		case COL_PLAYERS: return current_settings->show_column_players;
-		case COL_GENRE: return current_settings->show_column_genre;
-		case COL_TIMES_PLAYED: return current_settings->show_column_times_played;
-		case COL_RATING: return current_settings->show_column_rating;
-	}
-	return 0;
-}
-
-static void set_column_visible(int col, int visible)
-{
-	switch (col)
-	{
-		case COL_YEAR: current_settings->show_column_year = visible; break;
-		case COL_PLAYERS: current_settings->show_column_players = visible; break;
-		case COL_GENRE: current_settings->show_column_genre = visible; break;
-		case COL_TIMES_PLAYED: current_settings->show_column_times_played = visible; break;
-		case COL_RATING: current_settings->show_column_rating = visible; break;
-	}
-}
-
-static void rebuild_visible_columns(void)
-{
-	num_visible_columns = 0;
-	visible_columns[num_visible_columns++] = COL_TITLE;
-
-	for (int i = 0; i < NUM_OPTIONAL_COLUMNS; i++)
-	{
-		int col = current_settings->column_order[i];
-		if (is_column_visible(col))
-			visible_columns[num_visible_columns++] = col;
-	}
-}
-
-static void rebuild_nlist_format(void)
-{
-	static char format_buf[128];
-
-	if (num_visible_columns <= 1)
-	{
-		/* Title only, no BAR separators */
-		format_buf[0] = '\0';
-	}
-	else
-	{
-		/* Title gets the most space, extra columns get fixed widths */
-		int pos = 0;
-		for (int i = 0; i < num_visible_columns; i++)
-		{
-			if (i > 0)
-				pos += snprintf(format_buf + pos, sizeof(format_buf) - pos, ",");
-
-			if (i == 0)
-				pos += snprintf(format_buf + pos, sizeof(format_buf) - pos, "BAR W=70");
-			else if (visible_columns[i] == COL_YEAR && current_settings->short_year)
-				pos += snprintf(format_buf + pos, sizeof(format_buf) - pos, "BAR W=10");
-			else
-				pos += snprintf(format_buf + pos, sizeof(format_buf) - pos, "BAR W=15");
-		}
-	}
-
-	set(app->LV_GamesList, MUIA_NList_Format, (ULONG)format_buf);
-	DoMethod(app->LV_GamesList, MUIM_NList_Redraw, MUIV_NList_Redraw_All);
-}
-
-void apply_column_settings(void)
-{
-	rebuild_visible_columns();
-	rebuild_nlist_format();
-}
-
-static void apply_settings()
-{
-	if (current_settings == NULL)
-		return;
-
-	set(app->CH_Screenshots, MUIA_Selected, current_settings->hide_screenshots);
-	set(app->CH_NoGuiGfx, MUIA_Selected, current_settings->no_guigfx);
-
-	set(app->RA_TitlesFrom, MUIA_Radio_Active, current_settings->titles_from_dirs);
-	if (current_settings->titles_from_dirs)
-	{
-		set(app->CH_SmartSpaces, MUIA_Disabled, FALSE);
-		set(app->CH_SmartSpaces, MUIA_Selected, current_settings->no_smart_spaces);
-	}
-	else
-	{
-		set(app->CH_SmartSpaces, MUIA_Disabled, TRUE);
-		set(app->CH_SmartSpaces, MUIA_Disabled, TRUE);
-	}
-
-	set(app->CH_UseIgameDataTitle, MUIA_Selected, current_settings->use_igamedata_title);
-	set(app->CH_SaveStatsOnExit, MUIA_Selected, current_settings->save_stats_on_exit);
-	set(app->CH_FilterUseEnter, MUIA_Selected, current_settings->filter_use_enter);
-	set(app->CH_HideSidepanel, MUIA_Selected, current_settings->hide_side_panel);
-	set(app->CH_StartWithFavorites, MUIA_Selected, current_settings->start_with_favorites);
-	populate_column_order_list();
-	set(app->CH_ShortYear, MUIA_Selected, current_settings->short_year);
-
-	apply_column_settings();
-}
-
-static void set_default_settings(igame_settings *settings)
-{
-	current_settings->no_guigfx				= TRUE;
-	current_settings->filter_use_enter		= TRUE;
-	current_settings->hide_side_panel		= FALSE;
-	current_settings->hide_filter_bar		= FALSE;
-	current_settings->save_stats_on_exit	= TRUE;
-	current_settings->no_smart_spaces		= FALSE;
-	current_settings->use_igamedata_title		= TRUE;
-	current_settings->titles_from_dirs		= TRUE;
-	current_settings->hide_screenshots		= FALSE;
-	current_settings->start_with_favorites	= FALSE;
-	current_settings->show_column_year		= TRUE;
-	current_settings->show_column_players	= FALSE;
-	current_settings->show_column_genre		= TRUE;
-	current_settings->show_column_times_played = FALSE;
-	current_settings->show_column_rating	= FALSE;
-	current_settings->column_order[0]		= COL_GENRE;
-	current_settings->column_order[1]		= COL_YEAR;
-	current_settings->column_order[2]		= COL_PLAYERS;
-	current_settings->column_order[3]		= COL_TIMES_PLAYED;
-	current_settings->column_order[4]		= COL_RATING;
-	current_settings->short_year			= FALSE;
-	current_settings->last_scan_setup			= 0;
-}
-
-static void get_prefs_path(STRPTR prefsPath, STRPTR prefsFile)
-{
-	snprintf(prefsPath, MAX_PATH_SIZE, "ENVARC:%s", prefsFile);
-	if (!check_path_exists(prefsPath))
-	{
-		snprintf(prefsPath, MAX_PATH_SIZE, "PROGDIR:%s", prefsFile);
-	}
-}
-
-igame_settings *load_settings(const char* filename)
-{
-	const int buffer_size = 512;
-
-	STRPTR file_line = malloc(buffer_size * sizeof(char));
-	if (file_line == NULL)
-	{
-		msg_box((const char*)GetMBString(MSG_NotEnoughMemory));
-		return NULL;
-	}
-
-	STRPTR prefsPath = AllocVec(sizeof(char) * MAX_PATH_SIZE, MEMF_CLEAR);
-	if(prefsPath == NULL)
-	{
-		msg_box((const char*)GetMBString(MSG_NotEnoughMemory));
-
-		free(file_line);
-		return NULL;
-	}
-	get_prefs_path(prefsPath, (STRPTR)filename);
-
-	if (current_settings != NULL)
-	{
-		free(current_settings);
-		current_settings = NULL;
-	}
-	current_settings = (igame_settings *)calloc(1, sizeof(igame_settings));
-	set_default_settings(current_settings);
-
-	if (check_path_exists(prefsPath))
-	{
-		const BPTR fpsettings = Open(prefsPath, MODE_OLDFILE);
-		if (fpsettings)
-		{
-			do
-			{
-				if (FGets(fpsettings, file_line, buffer_size) == NULL)
-					break;
-
-				int len = strlen(file_line);
-				if (len > 0 && file_line[len - 1] == '\n') file_line[--len] = '\0';
-				if (len == 0 || file_line[0] == ';' || file_line[0] == '#')
-					continue;
-
-				if (!strncmp(file_line, "no_guigfx=", 10))
-					current_settings->no_guigfx = atoi((const char*)file_line + 10);
-				if (!strncmp(file_line, "filter_use_enter=", 17))
-					current_settings->filter_use_enter = atoi((const char*)file_line + 17);
-				if (!strncmp(file_line, "hide_side_panel=", 16))
-					current_settings->hide_side_panel = atoi((const char*)file_line + 16);
-				if (!strncmp(file_line, "hide_filter_bar=", 16))
-					current_settings->hide_filter_bar = atoi((const char*)file_line + 16);
-				if (!strncmp(file_line, "save_stats_on_exit=", 19))
-					current_settings->save_stats_on_exit = atoi((const char*)file_line + 19);
-				if (!strncmp(file_line, "no_smart_spaces=", 16))
-					current_settings->no_smart_spaces = atoi((const char*)file_line + 16);
-				if (!strncmp(file_line, "titles_from_dirs=", 17))
-					current_settings->titles_from_dirs = atoi((const char*)file_line + 17);
-				if (!strncmp(file_line, "hide_screenshots=", 17))
-					current_settings->hide_screenshots = atoi((const char*)file_line + 17);
-				if (!strncmp(file_line, "start_with_favorites=", 21))
-					current_settings->start_with_favorites = atoi((const char*)file_line + 21);
-				if (!strncmp(file_line, "use_igame.data_title=", 21))
-					current_settings->use_igamedata_title = atoi((const char*)file_line + 21);
-				if (!strncmp(file_line, "last_scan_setup=", 16))
-					current_settings->last_scan_setup = atoi((const char*)file_line + 16);
-				if (!strncmp(file_line, "show_column_year=", 17))
-					current_settings->show_column_year = atoi((const char*)file_line + 17);
-				if (!strncmp(file_line, "show_column_players=", 20))
-					current_settings->show_column_players = atoi((const char*)file_line + 20);
-				if (!strncmp(file_line, "show_column_genre=", 18))
-					current_settings->show_column_genre = atoi((const char*)file_line + 18);
-				if (!strncmp(file_line, "show_column_times_played=", 25))
-					current_settings->show_column_times_played = atoi((const char*)file_line + 25);
-				if (!strncmp(file_line, "show_column_rating=", 19))
-					current_settings->show_column_rating = atoi((const char*)file_line + 19);
-				if (!strncmp(file_line, "column_order=", 13))
-				{
-					char *p = (char *)file_line + 13;
-					for (int i = 0; i < NUM_OPTIONAL_COLUMNS && *p; i++)
-					{
-						current_settings->column_order[i] = atoi(p);
-						p = strchr(p, ',');
-						if (p) p++; else break;
-					}
-				}
-				if (!strncmp(file_line, "short_year=", 11))
-					current_settings->short_year = atoi((const char*)file_line + 11);
-			}
-			while (1);
-
-			Close(fpsettings);
-		}
-	}
-
-	if (current_settings->last_scan_setup == 0)
-		set_last_scan_bitfield();
-
-	rebuild_visible_columns();
-
-	if (prefsPath)
-		FreeVec(prefsPath);
-
-	if (file_line)
-		free(file_line);
-
-	return current_settings;
 }
 
 static void load_repos(const char* filename)
@@ -398,8 +141,7 @@ static void load_repos(const char* filename)
 			item_repos->next = NULL;
 
 			get_full_path(file_line, repo_path);
-			strncpy(item_repos->repo, repo_path, sizeof(item_repos->repo) - 1);
-			item_repos->repo[sizeof(item_repos->repo) - 1] = '\0';
+			strcpy(item_repos->repo, repo_path);
 
 			if (repos == NULL)
 			{
@@ -701,20 +443,20 @@ static void launchFromWB(slavesList *node)
 	strncpy(buf, "C:WBRun", bufSize);
 	if (check_path_exists(buf))
 	{
-		snprintf(exec, bufSize, "C:WBRun \"%s\"", node->path);
+		sprintf(exec, "C:WBRun \"%s\"", node->path);
 	}
 
 	strncpy(buf, "C:WBLoad", bufSize);
 	if (check_path_exists(buf))
 	{
-		snprintf(exec, bufSize, "C:WBLoad \"%s\"", node->path);
+		sprintf(exec, "C:WBLoad \"%s\"", node->path);
 	}
 
 	if (is_string_empty(exec))
 	{
 		if (createRunGameScript(node))
 		{
-			snprintf(exec, bufSize, "Execute T:rungame");
+			sprintf(exec, "Execute T:rungame");
 		}
 	}
 
@@ -776,7 +518,7 @@ void launch_game(void)
 		launchFromWB(existingNode);
 	}
 
-	snprintf(buf, bufSize, (const char *)GetMBString(MSG_TotalNumberOfGames), slaves_list_node_count(-1));
+	sprintf(buf, (const char *)GetMBString(MSG_TotalNumberOfGames), slaves_list_node_count(-1));
 	set_status_text(buf);
 
 	FreeVec(buf);
@@ -898,7 +640,7 @@ nextItem:
 	DoMethod(app->LV_GamesList, MUIM_NList_Sort);
 	set(app->LV_GamesList, MUIA_NList_Quiet, FALSE);
 
-	snprintf(buf, bufSize, (const char *)GetMBString(MSG_TotalNumberOfGames), slaves_list_node_count(cnt));
+	sprintf(buf, (const char *)GetMBString(MSG_TotalNumberOfGames), slaves_list_node_count(cnt));
 	set_status_text(buf);
 	free(buf);
 }
@@ -934,12 +676,12 @@ static int calcLastScanBitfield(void)
 	return scanBitfield;
 }
 
-static void set_last_scan_bitfield(void)
+void set_last_scan_bitfield(void)
 {
 	current_settings->last_scan_setup = calcLastScanBitfield();
 }
 
-static BOOL examine_folder(char *path)
+static BOOL examineFolder(char *path)
 {
 	BOOL success = TRUE;
 	int bufSize = sizeof(char) * MAX_PATH_SIZE;
@@ -964,21 +706,20 @@ static BOOL examine_folder(char *path)
 						strncmp((unsigned char *)FIblock->fib_FileName, "data\0", 5) &&
 						strncmp((unsigned char *)FIblock->fib_FileName, "Data\0", 5)
 					) {
-						strncpy(buf, FIblock->fib_FileName, bufSize - 1);
-						buf[bufSize - 1] = '\0';
+						strcpy(buf, FIblock->fib_FileName);
 
 						if(!is_path_folder(path))
 						{
-							snprintf(buf, bufSize, "%s%s", path, FIblock->fib_FileName);
+							sprintf(buf, "%s%s", path, FIblock->fib_FileName);
 						}
 						else
 						{
-							snprintf(buf, bufSize, "%s/%s", path, FIblock->fib_FileName);
+							sprintf(buf, "%s/%s", path, FIblock->fib_FileName);
 						}
 
 						get_full_path(buf, buf);
 						set_status_text(buf);
-						if (!(success = examine_folder(buf))) break;
+						if (!(success = examineFolder(buf))) break;
 					}
 				}
 
@@ -1001,11 +742,11 @@ static BOOL examine_folder(char *path)
 						char *igameDataPath = malloc(sizeof(char) * MAX_PATH_SIZE);
 						if(!is_path_folder(path))
 						{
-							snprintf(igameDataPath, MAX_PATH_SIZE, "%s%s", path, FIblock->fib_FileName);
+							sprintf(igameDataPath, "%s%s", path, FIblock->fib_FileName);
 						}
 						else
 						{
-							snprintf(igameDataPath, MAX_PATH_SIZE, "%s/%s", path, FIblock->fib_FileName);
+							sprintf(igameDataPath, "%s/%s", path, FIblock->fib_FileName);
 						}
 
 						node->instance = 0;
@@ -1025,7 +766,7 @@ static BOOL examine_folder(char *path)
 						node->players = 0;
 						node->path[0] = '\0';
 
-						getIGameDataInfo(igameDataPath, node);
+						get_igame_data_info(igameDataPath, node);
 						free(igameDataPath);
 
 						strncpy(buf, node->path, bufSize);
@@ -1062,11 +803,11 @@ static BOOL examine_folder(char *path)
 
 						if(!is_path_folder(path))
 						{
-							snprintf(buf, bufSize, "%s%s", path, FIblock->fib_FileName);
+							sprintf(buf, "%s%s", path, FIblock->fib_FileName);
 						}
 						else
 						{
-							snprintf(buf, bufSize, "%s/%s", path, FIblock->fib_FileName);
+							sprintf(buf, "%s/%s", path, FIblock->fib_FileName);
 						}
 
 						// Find if already exists in the list or is blacklisted, and ignore it
@@ -1085,7 +826,7 @@ static BOOL examine_folder(char *path)
 							node->instance = 0;
 							node->title[0] = '\0';
 							node->genre[0] = '\0';
-							snprintf(node->genre, sizeof(node->genre), "Unknown");
+							sprintf(node->genre, "Unknown");
 							node->user_title[0] = '\0';
 							node->chipset[0] = '\0';
 							node->rating[0] = '\0';
@@ -1109,7 +850,7 @@ static BOOL examine_folder(char *path)
 								snprintf(igameDataPath, sizeof(char) * MAX_PATH_SIZE, "%s/%s", path, DEFAULT_IGAMEDATA_FILE);
 								if (check_path_exists(igameDataPath))
 								{
-									getIGameDataInfo(igameDataPath, node);
+									get_igame_data_info(igameDataPath, node);
 								}
 								free(igameDataPath);
 							}
@@ -1157,7 +898,7 @@ static BOOL examine_folder(char *path)
 									node->instance = 0;
 									node->title[0] = '\0';
 									node->genre[0] = '\0';
-									snprintf(node->genre, sizeof(node->genre), "Unknown");
+									sprintf(node->genre,"Unknown");
 									node->user_title[0] = '\0';
 									node->chipset[0] = '\0';
 									node->rating[0] = '\0';
@@ -1171,7 +912,7 @@ static BOOL examine_folder(char *path)
 									node->players = 0;
 									node->path[0] = '\0';
 
-									getIGameDataInfo(igameDataPath, node);
+									get_igame_data_info(igameDataPath, node);
 
 									strncpy(existingNode->title, node->title, MAX_SLAVE_TITLE_SIZE);
 									if (is_string_empty(existingNode->title))
@@ -1226,7 +967,7 @@ void scan_repositories(void)
 		{
 			if(check_path_exists(item_repos->repo))
 			{
-				if (!(examine_folder(item_repos->repo))) break;
+				if (!(examineFolder(item_repos->repo))) break;
 			}
 		}
 
@@ -1263,7 +1004,7 @@ void scan_repositories(void)
 							? staleEntries[i]->user_title
 							: staleEntries[i]->title;
 						strncat(titleList, name, MSG_BUF_SIZE - strlen(titleList) - 2);
-						strncat(titleList, "\n", MSG_BUF_SIZE - strlen(titleList) - 1);
+						strcat(titleList, "\n");
 					}
 					if (staleTotal > MAX_STALE_DISPLAY)
 					{
@@ -1316,7 +1057,7 @@ void scan_repositories(void)
 	}
 }
 
-static void apply_side_panel_change(void)
+void apply_side_panel_change(void)
 {
 	if (!current_settings->hide_side_panel)
 	{
@@ -1341,101 +1082,6 @@ static void apply_side_panel_change(void)
 	sidepanelChanged = FALSE;
 }
 
-static void replace_screenshot(void)
-{
-	struct List *childsList = (struct List *)xget(app->GR_spacedScreenshot, MUIA_Group_ChildList);
-	Object *cstate = (Object *)childsList->lh_Head;
-	Object *child;
-
-	DoMethod(app->GR_spacedScreenshot, MUIM_Group_InitChange);
-	while ((child = (Object *)NextObject(&cstate)))
-	{
-		DoMethod(app->GR_spacedScreenshot, OM_REMMEMBER, child);
-		MUI_DisposeObject(child);
-	}
-	DoMethod(app->GR_spacedScreenshot, OM_ADDMEMBER, app->IM_GameImage_0 = app->IM_GameImage_1);
-	DoMethod(app->GR_spacedScreenshot, MUIM_Group_ExitChange);
-}
-
-static void show_screenshot(STRPTR screenshot_path)
-{
-	static char prvScreenshot[MAX_PATH_SIZE];
-
-	if (strcmp(screenshot_path, prvScreenshot))
-	{
-		if (current_settings->no_guigfx)
-		{
-			app->IM_GameImage_1 = MUI_NewObject(Dtpic_Classname,
-						MUIA_Dtpic_Name,				screenshot_path,
-						MUIA_Frame, 					MUIV_Frame_ImageButton,
-			TAG_DONE);
-		}
-		else
-		{
-			app->IM_GameImage_1 = GuigfxObject,
-						MUIA_Guigfx_FileName,			screenshot_path,
-						MUIA_Guigfx_Quality,			MUIV_Guigfx_Quality_Best,
-						MUIA_Guigfx_ScaleMode,			NISMF_SCALEFREE | NISMF_KEEPASPECT_PICTURE,
-						MUIA_Guigfx_Transparency,		0,
-						MUIA_Frame, 					MUIV_Frame_ImageButton,
-			End;
-		}
-
-		if (app->IM_GameImage_1)
-		{
-			replace_screenshot();
-		}
-
-		strncpy(prvScreenshot, screenshot_path, MAX_PATH_SIZE - 1);
-		prvScreenshot[MAX_PATH_SIZE - 1] = '\0';
-	}
-}
-
-static void get_screenshot_path(char *game_title, char *result)
-{
-	int bufSize = sizeof(char) * MAX_PATH_SIZE;
-	char buf[MAX_PATH_SIZE];
-
-	slavesList *existingNode = NULL;
-	if (existingNode = slaves_list_search_by_title(game_title, sizeof(char) * MAX_SLAVE_TITLE_SIZE))
-	{
-		get_parent_path(existingNode->path, buf, bufSize);
-
-		// Return the igame.iff from the game folder, if exists
-		snprintf(result, sizeof(char) * MAX_PATH_SIZE, "%s/igame.iff", buf);
-		if(check_image_datatype(result))
-		{
-			return;
-		}
-
-		// Return the slave icon from the game folder, if exists
-		// TODO: Check if this item is a slave. If not don't use the substring
-#if !defined(__morphos__)
-		{
-			STRPTR tmp = substring(existingNode->path, 0, -6);
-			if (tmp) { snprintf(result, sizeof(char) * MAX_PATH_SIZE, "%s.info", tmp); free(tmp); }
-		}
-		if(check_image_datatype(result))
-		{
-			return;
-		}
-#endif
-
-		// Return the default image from iGame folder, if exists
-		if(check_path_exists(DEFAULT_SCREENSHOT_FILE))
-		{
-			snprintf(result, sizeof(char) * MAX_PATH_SIZE, "%s", DEFAULT_SCREENSHOT_FILE);
-		}
-	}
-}
-
-static void show_default_screenshot(void)
-{
-	if (current_settings->hide_side_panel || current_settings->hide_screenshots)
-		return;
-
-	show_screenshot(DEFAULT_SCREENSHOT_FILE);
-}
 
 static void populate_sidebar_igamedata(slavesList *node)
 {
@@ -1497,11 +1143,7 @@ void game_click(void)
 	// Screenshot loading
 	if (!current_settings->hide_side_panel && !current_settings->hide_screenshots)
 	{
-		strncpy(pending_screenshot_title, game_title,
-				MAX_SLAVE_TITLE_SIZE - 1);
-		pending_screenshot_title[MAX_SLAVE_TITLE_SIZE - 1] = '\0';
-		screenshot_pending = TRUE;
-		screenshot_cooldown = SCREENSHOT_COOLDOWN_TICKS;
+		screenshot_set_pending(game_title);
 	}
 
 	// Sidebar game info
@@ -1543,53 +1185,6 @@ void game_click(void)
 	populate_sidebar_igamedata(node);
 }
 
-static void screenshot_load(void)
-{
-	screenshot_pending = FALSE;
-
-	if (current_settings->hide_side_panel || current_settings->hide_screenshots)
-		return;
-
-	char *image_path = AllocVec(sizeof(char) * MAX_PATH_SIZE, MEMF_CLEAR);
-	if (image_path == NULL)
-	{
-		msg_box((const char*)GetMBString(MSG_NotEnoughMemory));
-		return;
-	}
-
-	get_screenshot_path(pending_screenshot_title, image_path);
-	show_screenshot(image_path);
-
-	FreeVec(image_path);
-}
-
-void screenshot_update(void)
-{
-	if (!screenshot_pending)
-		return;
-
-	screenshot_load();
-}
-
-void screenshot_tick(void)
-{
-	if (!screenshot_pending)
-		return;
-
-	if (screenshot_cooldown > 0)
-	{
-		screenshot_cooldown--;
-		return;
-	}
-
-	screenshot_load();
-}
-
-BOOL screenshot_is_pending(void)
-{
-	return screenshot_pending;
-}
-
 /*
 * Adds a repository (path on the disk)
 * to the list of repositories
@@ -1612,12 +1207,10 @@ void repo_add(void)
 		}
 
 		get_full_path(repo_path, buf);
-		strncpy(item_repos->repo, buf, sizeof(item_repos->repo) - 1);
-		item_repos->repo[sizeof(item_repos->repo) - 1] = '\0';
+		strcpy(item_repos->repo, buf);
 		if (is_path_on_assign(repo_path))
 		{
-			strncpy(item_repos->repo, repo_path, sizeof(item_repos->repo) - 1);
-			item_repos->repo[sizeof(item_repos->repo) - 1] = '\0';
+			strcpy(item_repos->repo, repo_path);
 		}
 
 		if (repos == NULL)
@@ -1912,131 +1505,6 @@ static int get_cycle_index(Object* obj)
 	return index;
 }
 
-static int get_radio_index(Object* obj)
-{
-	int index = 0;
-	get(obj, MUIA_Radio_Active, &index);
-	return index;
-}
-
-void setting_filter_use_enter_changed(void)
-{
-	current_settings->filter_use_enter = (BOOL)xget(app->CH_FilterUseEnter, MUIA_Selected);
-}
-
-void setting_save_stats_on_exit_changed(void)
-{
-	current_settings->save_stats_on_exit = (BOOL)xget(app->CH_SaveStatsOnExit, MUIA_Selected);
-}
-
-void setting_smart_spaces_changed(void)
-{
-	current_settings->no_smart_spaces = (BOOL)xget(app->CH_SmartSpaces, MUIA_Selected);
-}
-
-void setting_use_igamedata_title_changed(void)
-{
-	current_settings->use_igamedata_title = (BOOL)xget(app->CH_UseIgameDataTitle, MUIA_Selected);
-}
-
-void setting_titles_from_changed(void)
-{
-	const int index = get_radio_index(app->RA_TitlesFrom);
-
-	// Index=0 -> Titles from Slaves
-	// Index=1 -> Titles from Dirs
-	current_settings->titles_from_dirs = index;
-
-	if (index == 1)
-		set(app->CH_SmartSpaces, MUIA_Disabled, FALSE);
-	else
-		set(app->CH_SmartSpaces, MUIA_Disabled, TRUE);
-}
-
-void setting_hide_screenshot_changed(void)
-{
-	current_settings->hide_screenshots = (BOOL)xget(app->CH_Screenshots, MUIA_Selected);
-	sidepanelChanged = TRUE;
-}
-
-void setting_no_guigfx_changed(void)
-{
-	current_settings->no_guigfx = (BOOL)xget(app->CH_NoGuiGfx, MUIA_Selected);
-}
-
-void settings_use(void)
-{
-	if (current_settings == NULL)
-		return;
-
-	sync_column_order_from_list();
-
-	if (sidepanelChanged)
-		apply_side_panel_change();
-
-	set(app->WI_Settings, MUIA_Window_Open, FALSE);
-}
-
-void settings_save(void)
-{
-	settings_use();
-
-	const int buffer_size = 1024;
-	char file_line[1024];
-	int pos = 0;
-
-	STRPTR prefsPath = AllocVec(sizeof(char) * MAX_PATH_SIZE, MEMF_CLEAR);
-	if(prefsPath == NULL)
-	{
-		msg_box((const char*)GetMBString(MSG_NotEnoughMemory));
-		return;
-	}
-	get_prefs_path(prefsPath, (STRPTR)DEFAULT_SETTINGS_FILE);
-
-	const BPTR fpsettings = Open(prefsPath, MODE_NEWFILE);
-	if (!fpsettings)
-	{
-		msg_box((const char*)"Could not save Settings file!");
-		FreeVec(prefsPath);
-		return;
-	}
-
-	pos += snprintf(file_line + pos, buffer_size - pos, "no_guigfx=%d\n", current_settings->no_guigfx);
-	pos += snprintf(file_line + pos, buffer_size - pos, "filter_use_enter=%d\n", current_settings->filter_use_enter);
-	pos += snprintf(file_line + pos, buffer_size - pos, "hide_side_panel=%d\n", current_settings->hide_side_panel);
-	pos += snprintf(file_line + pos, buffer_size - pos, "hide_filter_bar=%d\n", current_settings->hide_filter_bar);
-	pos += snprintf(file_line + pos, buffer_size - pos, "start_with_favorites=%d\n", current_settings->start_with_favorites);
-	pos += snprintf(file_line + pos, buffer_size - pos, "save_stats_on_exit=%d\n", current_settings->save_stats_on_exit);
-	pos += snprintf(file_line + pos, buffer_size - pos, "no_smart_spaces=%d\n", current_settings->no_smart_spaces);
-	pos += snprintf(file_line + pos, buffer_size - pos, "titles_from_dirs=%d\n", current_settings->titles_from_dirs);
-	pos += snprintf(file_line + pos, buffer_size - pos, "hide_screenshots=%d\n", current_settings->hide_screenshots);
-	pos += snprintf(file_line + pos, buffer_size - pos, "use_igame.data_title=%d\n", current_settings->use_igamedata_title);
-	pos += snprintf(file_line + pos, buffer_size - pos, "last_scan_setup=%d\n", current_settings->last_scan_setup);
-	pos += snprintf(file_line + pos, buffer_size - pos, "show_column_year=%d\n", current_settings->show_column_year);
-	pos += snprintf(file_line + pos, buffer_size - pos, "show_column_players=%d\n", current_settings->show_column_players);
-	pos += snprintf(file_line + pos, buffer_size - pos, "show_column_genre=%d\n", current_settings->show_column_genre);
-	pos += snprintf(file_line + pos, buffer_size - pos, "show_column_times_played=%d\n", current_settings->show_column_times_played);
-	pos += snprintf(file_line + pos, buffer_size - pos, "show_column_rating=%d\n", current_settings->show_column_rating);
-	pos += snprintf(file_line + pos, buffer_size - pos, "column_order=");
-	for (int i = 0; i < NUM_OPTIONAL_COLUMNS; i++)
-	{
-		if (i > 0) pos += snprintf(file_line + pos, buffer_size - pos, ",");
-		pos += snprintf(file_line + pos, buffer_size - pos, "%d", current_settings->column_order[i]);
-	}
-	pos += snprintf(file_line + pos, buffer_size - pos, "\n");
-	pos += snprintf(file_line + pos, buffer_size - pos, "short_year=%d\n", current_settings->short_year);
-
-	FPuts(fpsettings, (CONST_STRPTR)file_line);
-	Close(fpsettings);
-
-	FreeVec(prefsPath);
-}
-
-void setting_hide_side_panel_changed(void)
-{
-	current_settings->hide_side_panel = (BOOL)xget(app->CH_HideSidepanel, MUIA_Selected);
-}
-
 void toggle_side_panel(void)
 {
 	current_settings->hide_side_panel = !current_settings->hide_side_panel;
@@ -2059,63 +1527,7 @@ void toggle_filter_bar(void)
 }
 
 
-void setting_start_with_favorites_changed(void)
-{
-	current_settings->start_with_favorites = (BOOL)xget(app->CH_StartWithFavorites, MUIA_Selected);
-}
 
-void sync_column_order_from_list(void)
-{
-	LONG count = 0;
-	get(app->LV_ColumnOrder, MUIA_NList_Entries, &count);
-	for (int i = 0; i < count && i < NUM_OPTIONAL_COLUMNS; i++)
-	{
-		char *entry = NULL;
-		DoMethod(app->LV_ColumnOrder, MUIM_NList_GetEntry, i, &entry);
-		if (entry)
-			current_settings->column_order[i] = atoi(entry);
-	}
-}
-
-void populate_column_order_list(void)
-{
-	DoMethod(app->LV_ColumnOrder, MUIM_NList_Clear);
-	for (int i = 0; i < NUM_OPTIONAL_COLUMNS; i++)
-	{
-		char col_str[4];
-		snprintf(col_str, sizeof(col_str), "%d", current_settings->column_order[i]);
-		DoMethod(app->LV_ColumnOrder, MUIM_NList_InsertSingle, col_str,
-			MUIV_NList_Insert_Bottom);
-	}
-}
-
-void column_toggle_changed(void)
-{
-	char *entry = NULL;
-	DoMethod(app->LV_ColumnOrder, MUIM_NList_GetEntry,
-		MUIV_NList_GetEntry_Active, &entry);
-	if (!entry) return;
-
-	int col = atoi(entry);
-	set_column_visible(col, !is_column_visible(col));
-
-	DoMethod(app->LV_ColumnOrder, MUIM_NList_Redraw, MUIV_NList_Redraw_All);
-
-	sync_column_order_from_list();
-	apply_column_settings();
-}
-
-void column_order_changed(void)
-{
-	sync_column_order_from_list();
-	apply_column_settings();
-}
-
-void setting_short_year_changed(void)
-{
-	current_settings->short_year = (BOOL)xget(app->CH_ShortYear, MUIA_Selected);
-	apply_column_settings();
-}
 
 void msg_box(const char* msg)
 {

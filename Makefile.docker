@@ -111,7 +111,8 @@ igame_OBJS	= src/funcs_$(CPU).o src/iGameGUI_$(CPU).o \
 	src/slavesList_$(CPU).o src/genresList_$(CPU).o \
 	src/chipsetList_$(CPU).o src/blacklist_$(CPU).o \
 	src/WinInfo_$(CPU).o src/WinProps_$(CPU).o \
-	src/WinAbout_$(CPU).o src/WinBlacklist_$(CPU).o
+	src/WinAbout_$(CPU).o src/WinBlacklist_$(CPU).o \
+	src/screenshot_$(CPU).o src/settings_$(CPU).o src/columns_$(CPU).o
 
 ##########################################################################
 # Rule for building
@@ -177,6 +178,16 @@ src/WinAbout_$(CPU).o: src/WinAbout.c src/WinAbout.h src/iGameExtern.h \
 src/WinBlacklist_$(CPU).o: src/WinBlacklist.c src/WinBlacklist.h \
 	src/iGameExtern.h src/iGameGUI.h src/iGame_strings.h \
 	src/slavesList.h src/blacklist.h src/funcs.h src/strfuncs.h
+
+src/screenshot_$(CPU).o: src/screenshot.c src/screenshot.h \
+	src/iGameExtern.h src/iGameGUI.h src/fsfuncs.h
+
+src/settings_$(CPU).o: src/settings.c src/settings.h \
+	src/iGameExtern.h src/iGameGUI.h src/iGame_strings.h \
+	src/funcs.h src/columns.h src/fsfuncs.h
+
+src/columns_$(CPU).o: src/columns.c src/columns.h \
+	src/iGameExtern.h src/iGameGUI.h
 
 ##########################################################################
 # generic rules
