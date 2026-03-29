@@ -1,40 +1,34 @@
-# iGame+
+# iGamePlus
 
 A WHDLoad game launcher for Amiga, forked from [iGame](https://github.com/MrZammler/iGame) by Emmanuel Vasilakis.
 
-![iGame+ screenshot](/screenshot_github.png?raw=true "iGame+ screenshot")
+![iGamePlus screenshot](/screenshot_github.png?raw=true "iGamePlus screenshot")
 
-## What's new in iGame+ (compared to iGame)
+## What's new in iGamePlus (compared to iGame)
 
-### Sidebar game info panel
-- Game title, genre, developer and year displayed in the sidebar when a game is selected
-- Details panel with chipset, players, rating, times played
-- Screenshots scale to fill available sidebar space, works on all screen modes including PAL/NTSC HiRes
-- Sidebar resizable via Balance divider
+### Sidebar
+- Game info panel with title, genre, developer, year, chipset, players, rating, times played
+- Screenshots scale to fill available sidebar space on all screen modes
 
 ### Filter bar
-- Togglable filter bar (hotkey T) with genre popup dropdown, group cycle, chipset cycle
+- Togglable filter bar (hotkey T) with genre and chipset dropdowns
 - Rating filter — type `r>8` in the filter field to show games rated 8.0+, combine with title search like `r>7.5 elite`
 
-### Column management
+### Columns
 - Configurable columns — show/hide Year, Players, Genre, Times Played, Rating
-- Drag-sortable column order in Settings with live preview
-- Short Year display option (96 instead of 1996) to save screen space
+- Drag-sortable column order in Settings
+- Short Year display option (96 instead of 1996)
 
 ### Game management
-- Favourite hotkey (F) — favourites shown in bold
+- Favourite hotkey (F), favourites shown in bold
 - Hide game hotkey (H)
-- Hidden games management — Unhide Selected, Unhide All, Delete All (with confirmation)
-- Import ratings from `PROGDIR:igame.ratings` file (Actions menu)
-- Start with favourites option
-- Stale game detection on rescan — asks before removing
+- Unhide Selected, Unhide All, Delete All Hidden (with confirmation)
+- Import ratings from `PROGDIR:igame.ratings` (Actions menu)
+- Stale game detection on rescan
 
-### Fixes and improvements
-- Screenshots no longer crash on PAL/NTSC HiRes screens
-- Menu hotkeys work reliably
+### Fixes
 - Fixed memory leaks in CSV loading, screenshot handling, and WHDLoad execution
 - Fixed stack buffer overflows in path handling
-- Optimized linked list operations with O(1) tail insertion
 - Fixed OS4 ExamineDir API usage
 
 ## Warning
