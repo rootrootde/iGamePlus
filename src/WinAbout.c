@@ -38,7 +38,7 @@
 
 extern igame_settings *current_settings;
 
-APTR getAboutWindow(struct ObjApp *object)
+APTR get_about_window(struct ObjApp *object)
 {
 	object->GR_WI_About_Links = HSpace(0);
 	if (current_settings->show_url_links)

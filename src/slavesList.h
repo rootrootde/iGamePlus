@@ -25,17 +25,17 @@
 
 
 void slavesListAddHead(slavesList *);
-void slavesListAddTail(slavesList *);
+void slaves_list_add_tail(slavesList *);
 void slavesListPrint(void);
 void slavesListClearTitles(void);
 slavesList *slavesListSearchByPath(char *, unsigned int);
-slavesList *slavesListSearchByTitle(char *, unsigned int);
+slavesList *slaves_list_search_by_title(char *, unsigned int);
 void slavesListCountInstancesByTitle(slavesList *);
 BOOL slavesListRemoveByPath(const char *, unsigned int);
 slavesList *getSlavesListHead(void);
-void setSlavesListBuffer(slavesList *);
-slavesList *getSlavesListBuffer(void);
+void set_slaves_list_buffer(slavesList *);
+slavesList *get_slaves_list_buffer(void);
 void emptySlavesList(void);
-int slavesListNodeCount(int);
+int slaves_list_node_count(int);
 
 #endif

@@ -23,7 +23,7 @@
 #ifndef WIN_ABOUT_H
 #define WIN_ABOUT_H
 
-APTR getAboutWindow(struct ObjApp *);
+APTR get_about_window(struct ObjApp *);
 void setAboutWindowMethods(struct ObjApp *);
 
 #endif

@@ -62,14 +62,14 @@ HOOKPROTO(StopHookFunc, void, Object *strObj, const struct FileRequester *req)
 			strlcat(buf, "/", pathSize);
 		strlcat(buf, req->fr_File, pathSize);
 		set(strObj, MUIA_String_Contents, buf);
-		updateToolTypesText(buf);
+		update_tooltypes_text(buf);
 
 		free(buf);
 	}
 }
 MakeStaticHook(PopaslStopHook, StopHookFunc);
 
-APTR getPropertiesWindow(struct ObjApp *object)
+APTR get_properties_window(struct ObjApp *object)
 {
 	return WindowObject,
 		MUIA_Window_Title, GetMBString(MSG_WI_Properties),
@@ -121,7 +121,7 @@ APTR getPropertiesWindow(struct ObjApp *object)
 
 void setPropertiesWindowMethods(struct ObjApp *object)
 {
-	MakeStaticHook(PropertiesOKButtonHook, saveItemProperties);
+	MakeStaticHook(PropertiesOKButtonHook, save_item_properties);
 
 	DoMethod(object->WI_Properties,
 		MUIM_Notify, MUIA_Window_CloseRequest, TRUE,

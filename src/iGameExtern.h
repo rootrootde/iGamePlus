@@ -78,7 +78,7 @@ typedef struct settings
 	int hide_filter_bar;
 	int no_guigfx;
 	int start_with_favorites;
-	int useIgameDataTitle;
+	int use_igamedata_title;
 	int show_url_links;
 	int show_column_year;
 	int show_column_players;
@@ -87,12 +87,12 @@ typedef struct settings
 	int show_column_rating;
 	int column_order[NUM_OPTIONAL_COLUMNS];
 	int short_year;
-	int lastScanSetup;  // It keeps info of the settings on the last scan
+	int last_scan_setup;  // It keeps info of the settings on the last scan
 							// that influence the item data
 							// It is a bitfield with the following structure
 							//  ------------ no_smart_spaces
 							//  |  --------- titles_from_dirs
-							//  |  |  ------ useIgameDataTitle
+							//  |  |  ------ use_igamedata_title
 							//  |  |  |
 							//  0  0  0
 } igame_settings;

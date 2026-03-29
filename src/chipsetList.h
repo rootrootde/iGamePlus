@@ -29,6 +29,6 @@ chipsetList *chipsetListSearchByTitle(char *, unsigned int);
 chipsetList *getChipsetListHead(void);
 void emptyChipsetList(void);
 int chipsetListNodeCount(int);
-void addChipsetInList(char *);
+void add_chipset_in_list(char *);
 
 #endif

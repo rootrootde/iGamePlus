@@ -216,11 +216,11 @@ HOOKPROTONH(ConstructLI_TextFunc, APTR, APTR pool, struct slavesList *item)
 	if (newentry)
 	{
 		// Decide from where the item name will be taken
-		if(!isStringEmpty(item->user_title))
+		if(!is_string_empty(item->user_title))
 		{
 			snprintf(newentry->title, sizeof(newentry->title), "%s", item->user_title);
 		}
-		else if(isStringEmpty(item->user_title) && (item->instance > 0))
+		else if(is_string_empty(item->user_title) && (item->instance > 0))
 		{
 			// snprintf(item->user_title, sizeof(item->user_title),
 				// "%s [%d]", item->title, item->instance);
@@ -455,8 +455,8 @@ struct ObjApp *CreateApp(void)
 	MakeStaticHook(MenuScanHook, scan_repositories);
 	MakeStaticHook(MenuHideHook, game_hide);
 	MakeStaticHook(MenuToggleFavouriteHook, game_toggle_favourite);
-	MakeStaticHook(MenuPropertiesHook, slaveProperties);
-	MakeStaticHook(MenuItemInfoHook, getItemInformation);
+	MakeStaticHook(MenuPropertiesHook, slave_properties);
+	MakeStaticHook(MenuItemInfoHook, get_item_information);
 	MakeStaticHook(MenuAddNonWhdloadHook, add_non_whdload);
 	MakeStaticHook(OpenCurrentDirHook, open_current_dir);
 	MakeStaticHook(MenuOpenListHook, open_list);
@@ -483,7 +483,7 @@ struct ObjApp *CreateApp(void)
 	MakeStaticHook(ToggleSidePanelHook, toggle_side_panel);
 	MakeStaticHook(SettingStartWithFavoritesChangedHook, setting_start_with_favorites_changed);
 	MakeStaticHook(SettingsUseHook, settings_use);
-	MakeStaticHook(SettingUseIgameDataTitleHook, settingUseIgameDataTitleChanged);
+	MakeStaticHook(SettingUseIgameDataTitleHook, setting_use_igamedata_title_changed);
 	MakeStaticHook(ImportRatingsHook, import_ratings);
 	MakeStaticHook(ColumnToggleChangedHook, column_toggle_changed);
 	MakeStaticHook(ColumnOrderChangedHook, column_order_changed);
@@ -1276,13 +1276,13 @@ object->RA_TitlesFromContent[0] = (CONST_STRPTR)GetMBString(MSG_RA_TitlesFrom0);
 		MUIA_Application_HelpFile, "iGame.guide",
 		MUIA_Application_DiskObject, GetDiskObject("PROGDIR:iGame"),
 		SubWindow, object->WI_MainWindow,
-		SubWindow, object->WI_Properties = getPropertiesWindow(object),
+		SubWindow, object->WI_Properties = get_properties_window(object),
 		SubWindow, object->WI_GameRepositories,
 		SubWindow, object->WI_AddNonWHDLoad,
-		SubWindow, object->WI_About = getAboutWindow(object),
+		SubWindow, object->WI_About = get_about_window(object),
 		SubWindow, object->WI_Settings,
-		SubWindow, object->WI_Information = getInformationWindow(object),
-		SubWindow, object->WI_Blacklist = getBlacklistWindow(object),
+		SubWindow, object->WI_Information = get_information_window(object),
+		SubWindow, object->WI_Blacklist = get_blacklist_window(object),
 		End;
 
 	if (!object->App)
@@ -1826,7 +1826,7 @@ void DisposeApp(struct ObjApp * object)
 	}
 }
 
-BOOL checkImageDatatype(STRPTR filename)
+BOOL check_image_datatype(STRPTR filename)
 {
 	BOOL result = FALSE;
 	BPTR lock;

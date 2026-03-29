@@ -126,9 +126,9 @@ int genresListNodeCount(int cnt)
 	return nodeCount;
 }
 
-genresList *addGenreInList(const char *title)
+genresList *add_genre_in_list(const char *title)
 {
-	if (isStringEmpty(title))
+	if (is_string_empty(title))
 		return NULL;
 
 	if (genresListSearchByTitle(title, sizeof(char) * MAX_GENRE_NAME_SIZE) == NULL)

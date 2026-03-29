@@ -35,10 +35,10 @@ static blacklistNode *head = NULL;
 
 void blacklistAdd(const char *path)
 {
-	if (isStringEmpty(path))
+	if (is_string_empty(path))
 		return;
 
-	if (blacklistContains(path))
+	if (blacklist_contains(path))
 		return;
 
 	blacklistNode *node = malloc(sizeof(blacklistNode));
@@ -51,9 +51,9 @@ void blacklistAdd(const char *path)
 	head = node;
 }
 
-int blacklistContains(const char *path)
+int blacklist_contains(const char *path)
 {
-	if (isStringEmpty(path))
+	if (is_string_empty(path))
 		return 0;
 
 	blacklistNode *curr = head;
@@ -66,7 +66,7 @@ int blacklistContains(const char *path)
 	return 0;
 }
 
-void blacklistLoad(const char *filename)
+void blacklist_load(const char *filename)
 {
 	const BPTR fp = Open(filename, MODE_OLDFILE);
 	if (fp)
@@ -80,7 +80,7 @@ void blacklistLoad(const char *filename)
 			if (len > 0 && line[len - 1] == '\n')
 				line[len - 1] = '\0';
 
-			if (!isStringEmpty(line))
+			if (!is_string_empty(line))
 			{
 				blacklistAdd(line);
 			}
@@ -109,7 +109,7 @@ void blacklistSave(const char *filename)
 
 void blacklistRemove(const char *path)
 {
-	if (isStringEmpty(path))
+	if (is_string_empty(path))
 		return;
 
 	blacklistNode *prev = NULL;

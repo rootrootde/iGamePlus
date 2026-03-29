@@ -126,9 +126,9 @@ int chipsetListNodeCount(int cnt)
 	return nodeCount;
 }
 
-void addChipsetInList(char *title)
+void add_chipset_in_list(char *title)
 {
-	if (isStringEmpty(title))
+	if (is_string_empty(title))
 		return;
 
 	if (chipsetListSearchByTitle(title, sizeof(char) * MAX_CHIPSET_SIZE) == NULL)

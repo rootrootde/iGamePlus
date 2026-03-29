@@ -177,11 +177,11 @@ int main(int argc, char **argv)
 				break;
 
 			case MENU_GAMEPROPERTIES:
-				slaveProperties();
+				slave_properties();
 				break;
 
 			case MENU_ITEMINFO:
-				getItemInformation();
+				get_item_information();
 				break;
 
 			case MENU_GAMEFOLDER:

@@ -23,7 +23,7 @@
 #ifndef WIN_PROPS_H
 #define WIN_PROPS_H
 
-APTR getPropertiesWindow(struct ObjApp *);
+APTR get_properties_window(struct ObjApp *);
 void setPropertiesWindowMethods(struct ObjApp *);
 
 #endif

@@ -143,6 +143,6 @@ struct ObjApp
 struct ObjApp *CreateApp(void);
 void DisposeApp(struct ObjApp *);
 
-BOOL checkImageDatatype(STRPTR);
+BOOL check_image_datatype(STRPTR);
 
 #endif

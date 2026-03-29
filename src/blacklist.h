@@ -29,10 +29,10 @@ typedef struct blacklistNode
 	struct blacklistNode *next;
 } blacklistNode;
 
-void blacklistLoad(const char *filename);
+void blacklist_load(const char *filename);
 void blacklistSave(const char *filename);
 void blacklistAdd(const char *path);
-int blacklistContains(const char *path);
+int blacklist_contains(const char *path);
 void blacklistRemove(const char *path);
 void blacklistRemoveAll(void);
 blacklistNode *blacklistGetHead(void);

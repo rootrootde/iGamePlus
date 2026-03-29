@@ -73,7 +73,7 @@ extern igame_settings *current_settings;
 /*
  * Get the path of the parent folder
  */
-void getParentPath(char *filename, char *result, int resultSize)
+void get_parent_path(char *filename, char *result, int resultSize)
 {
 	BPTR fileLock = Lock(filename, SHARED_LOCK);
 	if (fileLock)
@@ -89,7 +89,7 @@ void getParentPath(char *filename, char *result, int resultSize)
 /*
  * Get the filename of a folder/file from a path
  */
-void getNameFromPath(char *path, char *result, unsigned int resultSize)
+void get_name_from_path(char *path, char *result, unsigned int resultSize)
 {
 	BPTR pathLock = Lock(path, SHARED_LOCK);
 	if (pathLock) {
@@ -110,7 +110,7 @@ void getNameFromPath(char *path, char *result, unsigned int resultSize)
 	}
 }
 
-void getFullPath(const char *path, char *result)
+void get_full_path(const char *path, char *result)
 {
 	char buf[MAX_PATH_SIZE];
 	snprintf(buf, sizeof(buf), "%s", path);
@@ -172,7 +172,7 @@ BOOL get_filename(const char *title, const char *positive_text, const BOOL save_
 	return result;
 }
 
-void slavesListLoadFromCSV(char *filename)
+void slaves_list_load_from_csv(char *filename)
 {
 	int lineBufSize = sizeof(char) * 512;
 
@@ -219,11 +219,11 @@ void slavesListLoadFromCSV(char *filename)
 					STRPTR tmp = substring(buf, 1, -2);
 				if (tmp) { snprintf(node->genre, sizeof(node->genre), "%s", tmp); free(tmp); }
 				}
-				if(isStringEmpty(node->genre))
+				if(is_string_empty(node->genre))
 				{
 					snprintf(node->genre, sizeof(node->genre), "Unknown");
 				}
-				addGenreInList(node->genre);
+				add_genre_in_list(node->genre);
 
 				buf = strtok(NULL, ";");
 				node->path[0] = '\0';
@@ -282,7 +282,7 @@ void slavesListLoadFromCSV(char *filename)
 					STRPTR tmp = substring(buf, 1, -2);
 				if (tmp) { snprintf(node->chipset, sizeof(node->chipset), "%s", tmp); free(tmp); }
 				}
-				addChipsetInList(node->chipset);
+				add_chipset_in_list(node->chipset);
 
 				buf = strtok(NULL, ";");
 				node->rating[0] = '\0';
@@ -296,7 +296,7 @@ void slavesListLoadFromCSV(char *filename)
 					}
 				}
 
-				slavesListAddTail(node);
+				slaves_list_add_tail(node);
 			}
 			fclose(fpgames);
 			FreeVec(lineBuf);
@@ -304,7 +304,7 @@ void slavesListLoadFromCSV(char *filename)
 	}
 }
 
-void slavesListSaveToCSV(const char *filename)
+void slaves_list_save_to_csv(const char *filename)
 {
 	char csvFilename[MAX_PATH_SIZE];
 	set(app->TX_Status, MUIA_Text_Contents, (const char*)GetMBString(MSG_SavingGamelist));
@@ -412,16 +412,16 @@ int get_title_from_slave(char* slave, char* title)
 /*
  * Set the item title name based on the path on disk
  */
-void getTitleFromPath(char *path, char *result, int resultSize)
+void get_title_from_path(char *path, char *result, int resultSize)
 {
 	int bufSize = sizeof(char) * MAX_PATH_SIZE;
 	char *buf = AllocVec(bufSize, MEMF_CLEAR);
 	char *itemFolderPath = AllocVec(bufSize, MEMF_CLEAR);
 
-	getParentPath(path, itemFolderPath, bufSize);
+	get_parent_path(path, itemFolderPath, bufSize);
 	if (itemFolderPath)
 	{
-		getNameFromPath(itemFolderPath, buf, bufSize);
+		get_name_from_path(itemFolderPath, buf, bufSize);
 
 		if (current_settings->no_smart_spaces)
 		{
@@ -483,13 +483,13 @@ void open_current_dir(void)
 	}
 
 	slavesList *existingNode = NULL;
-	if ((existingNode = slavesListSearchByTitle(game_title, sizeof(char) * MAX_SLAVE_TITLE_SIZE)) == NULL)
+	if ((existingNode = slaves_list_search_by_title(game_title, sizeof(char) * MAX_SLAVE_TITLE_SIZE)) == NULL)
 	{
 		msg_box((const char*)GetMBString(MSG_SelectGameFromList));
 		return;
 	}
 
-	getParentPath(existingNode->path, buf, bufSize);
+	get_parent_path(existingNode->path, buf, bufSize);
 	if(!buf)
 	{
 		msg_box((const char*)GetMBString(MSG_DirectoryNotFound));
@@ -510,7 +510,7 @@ void open_current_dir(void)
 }
 
 // Check if the path is a folder or a partition
-BOOL isPathFolder(char *path)
+BOOL is_path_folder(char *path)
 {
 	if (path[strlen(path)-1] == ':')
 		return FALSE;
@@ -522,7 +522,7 @@ BOOL isPathFolder(char *path)
 * Get the icon tooltypes and copies them in result
 * The path needs to be the full file path without .info at the end
 */
-void getIconTooltypes(char *path, char *result)
+void get_icon_tooltypes(char *path, char *result)
 {
 	if (IconBase)
 	{
@@ -551,7 +551,7 @@ void getIconTooltypes(char *path, char *result)
 	}
 }
 
-void setIconTooltypes(char *path, char *tooltypes)
+void set_icon_tooltypes(char *path, char *tooltypes)
 {
 	if (IconBase && (IconBase->lib_Version >= 44))
 	{
@@ -619,7 +619,7 @@ void setIconTooltypes(char *path, char *tooltypes)
 * Check if the needed slave file is set in .info tooltypes
 * The infoFile needs to be the full file path without .info at the end
 */
-BOOL checkSlaveInTooltypes(char *infoFile, char *slaveName)
+BOOL check_slave_in_tooltypes(char *infoFile, char *slaveName)
 {
 	struct DiskObject *diskObj = GetDiskObjectNew(infoFile);
 	if(diskObj)
@@ -638,10 +638,10 @@ BOOL checkSlaveInTooltypes(char *infoFile, char *slaveName)
 * Prepare the exec command based on icon tooltypes
 * The infoFile needs to be the full file path without .info at the end
 */
-void prepareWHDExecution(char *infoFile, char *result)
+void prepare_whd_execution(char *infoFile, char *result)
 {
 	char *tooltypes = AllocVec(sizeof(char) * 1024, MEMF_CLEAR);
-	getIconTooltypes(infoFile, tooltypes);
+	get_icon_tooltypes(infoFile, tooltypes);
 
 	char **table = my_split(tooltypes, "\n");
 	char **tableBase = table;
@@ -670,7 +670,7 @@ void prepareWHDExecution(char *infoFile, char *result)
 			{
 				snprintf(tmpBuf, sizeof(tmpBuf), "%s=%d", tmpTbl[0], hex2dec((char *)tmpTbl[1]));
 			}
-			else if (isNumeric(tmpTbl[1]))
+			else if (is_numeric(tmpTbl[1]))
 			{
 				snprintf(tmpBuf, sizeof(tmpBuf), "%s=%s", tmpTbl[0], tmpTbl[1]);
 			}
@@ -712,7 +712,7 @@ void getIGameDataInfo(char *igameDataPath, slavesList *node)
 
 			if (key && value && strlen(value) > 0)
 			{
-				if(current_settings->useIgameDataTitle && !strcmp(key, "title"))
+				if(current_settings->use_igamedata_title && !strcmp(key, "title"))
 				{
 					strncpy(node->title, value, MAX_SLAVE_TITLE_SIZE);
 				}
@@ -727,23 +727,23 @@ void getIGameDataInfo(char *igameDataPath, slavesList *node)
 					strncpy(node->genre, value, MAX_GENRE_NAME_SIZE);
 				}
 
-				if(!strcmp(key, "year") && isNumeric(value))
+				if(!strcmp(key, "year") && is_numeric(value))
 				{
 					node->year=atoi(value);
 				}
 
-				if(!strcmp(key, "players") && isNumeric(value))
+				if(!strcmp(key, "players") && is_numeric(value))
 				{
 					node->players=atoi(value);
 				}
 
-				if(!strcmp(key, "rating") && !isStringEmpty(value))
+				if(!strcmp(key, "rating") && !is_string_empty(value))
 				{
 					strncpy(node->rating, value, sizeof(node->rating) - 1);
 					node->rating[sizeof(node->rating) - 1] = '\0';
 				}
 
-				if(!strcmp(key, "exe") && !isStringEmpty(value) && !strcasestr(value, ".slave"))
+				if(!strcmp(key, "exe") && !is_string_empty(value) && !strcasestr(value, ".slave"))
 				{
 					strncpy(node->path, value, MAX_PATH_SIZE);
 				}
@@ -755,7 +755,7 @@ void getIGameDataInfo(char *igameDataPath, slavesList *node)
 	}
 }
 
-void loadGenresFromFile(void)
+void load_genres_from_file(void)
 {
 	const BPTR fpgenres = Open(DEFAULT_GENRES_FILE, MODE_OLDFILE);
 	if (fpgenres)
@@ -765,9 +765,9 @@ void loadGenresFromFile(void)
 		while (FGets(fpgenres, line, lineSize) != NULL)
 		{
 			line[strlen(line) - 1] = '\0';
-			if (!isStringEmpty(line))
+			if (!is_string_empty(line))
 			{
-				addGenreInList(line);
+				add_genre_in_list(line);
 			}
 		}
 
@@ -776,7 +776,7 @@ void loadGenresFromFile(void)
 	}
 }
 
-BOOL deleteDirectory(const char *path)
+BOOL delete_directory(const char *path)
 {
 	BPTR dirLock = Lock(path, SHARED_LOCK);
 	if (!dirLock)
@@ -796,7 +796,7 @@ BOOL deleteDirectory(const char *path)
 
 			if (EXD_IS_DIRECTORY(data))
 			{
-				deleteDirectory(childPath);
+				delete_directory(childPath);
 			}
 			else
 			{
@@ -819,7 +819,7 @@ BOOL deleteDirectory(const char *path)
 
 			if (fib->fib_DirEntryType > 0)
 			{
-				deleteDirectory(childPath);
+				delete_directory(childPath);
 			}
 			else
 			{
@@ -836,7 +836,7 @@ BOOL deleteDirectory(const char *path)
 	return DeleteFile(path);
 }
 
-BOOL isPathOnAssign(const char *path)
+BOOL is_path_on_assign(const char *path)
 {
 	if ((path == NULL) || (path[0] == '/'))
 		return FALSE;
@@ -856,7 +856,7 @@ BOOL isPathOnAssign(const char *path)
 	}
 
 	char *buf = malloc(bufSize);
-	getFullPath(volume, buf);
+	get_full_path(volume, buf);
 	if (!strcmp(volume, buf))
 	{
 		free(volume);

@@ -77,7 +77,7 @@ HOOKPROTONH(ObjStrFunc, int, Object *popObject, Object *strObject)
 }
 MakeStaticHook(ObjStrHook, ObjStrFunc);
 
-APTR getInformationWindow(struct ObjApp *object)
+APTR get_information_window(struct ObjApp *object)
 {
 	object->GR_WI_Information_Links = HSpace(0);
 	if (current_settings->show_url_links)
@@ -271,7 +271,7 @@ APTR getInformationWindow(struct ObjApp *object)
 
 void setInformationWindowMethods(struct ObjApp *object)
 {
-	MakeStaticHook(InformationOKButtonHook, saveItemInformation);
+	MakeStaticHook(InformationOKButtonHook, save_item_information);
 
 	DoMethod(object->WI_Information,
 		MUIM_Notify, MUIA_Window_CloseRequest, TRUE,

@@ -298,7 +298,7 @@ STRPTR GetMBString(ULONG refId)
 	#endif
 }
 
-BOOL isStringEmpty(const char *string)
+BOOL is_string_empty(const char *string)
 {
 	if (string == NULL)
 		return TRUE;
@@ -306,7 +306,7 @@ BOOL isStringEmpty(const char *string)
 	return string[0] == '\0';
 }
 
-BOOL isNumeric(const char *string)
+BOOL is_numeric(const char *string)
 {
 	while(*string)
 	{

@@ -23,27 +23,27 @@
 #ifndef _FS_FUNCS_H
 #define _FS_FUNCS_H
 
-void getParentPath(char *, char *, int);
-void getNameFromPath(char *, char *, unsigned int);
-void getFullPath(const char *, char *);
+void get_parent_path(char *, char *, int);
+void get_name_from_path(char *, char *, unsigned int);
+void get_full_path(const char *, char *);
 BOOL check_path_exists(char *);
 BOOL get_filename(const char *, const char *, const BOOL);
-void slavesListLoadFromCSV(char *);
-void slavesListSaveToCSV(const char *);
+void slaves_list_load_from_csv(char *);
+void slaves_list_save_to_csv(const char *);
 int get_title_from_slave(char *, char *);
-void getTitleFromPath(char *, char *, int);
+void get_title_from_path(char *, char *, int);
 const char *get_directory_name(const char *);
 char *get_executable_name(int, char **);
 void open_current_dir(void);
 void get_path(char *, char *);
-BOOL isPathFolder(char *);
-void getIconTooltypes(char *, char *);
-void setIconTooltypes(char *, char *);
-BOOL checkSlaveInTooltypes(char *, char *);
-void prepareWHDExecution(char *, char *);
+BOOL is_path_folder(char *);
+void get_icon_tooltypes(char *, char *);
+void set_icon_tooltypes(char *, char *);
+BOOL check_slave_in_tooltypes(char *, char *);
+void prepare_whd_execution(char *, char *);
 void getIGameDataInfo(char *, slavesList *);
-void loadGenresFromFile(void);
-BOOL deleteDirectory(const char *);
-BOOL isPathOnAssign(const char *);
+void load_genres_from_file(void);
+BOOL delete_directory(const char *);
+BOOL is_path_on_assign(const char *);
 
 #endif

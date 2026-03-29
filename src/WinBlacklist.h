@@ -23,7 +23,7 @@
 #ifndef WIN_BLACKLIST_H
 #define WIN_BLACKLIST_H
 
-APTR getBlacklistWindow(struct ObjApp *);
+APTR get_blacklist_window(struct ObjApp *);
 void setBlacklistWindowMethods(struct ObjApp *);
 void blacklistWindowPopulate(void);
 void blacklistWindowUnhide(void);

@@ -56,7 +56,7 @@ void slavesListAddHead(slavesList *node)
 	}
 }
 
-void slavesListAddTail(slavesList *node)
+void slaves_list_add_tail(slavesList *node)
 {
 	if (node != NULL)
 	{
@@ -124,7 +124,7 @@ slavesList *slavesListSearchByPath(char *path, unsigned int pathSize)
 	return currPtr;
 }
 
-slavesList *slavesListSearchByTitle(char *title, unsigned int titleSize)
+slavesList *slaves_list_search_by_title(char *title, unsigned int titleSize)
 {
 	if (isListEmpty(slavesListHead))
 	{
@@ -201,12 +201,12 @@ slavesList *getSlavesListHead(void)
 	return slavesListHead;
 }
 
-void setSlavesListBuffer(slavesList *node)
+void set_slaves_list_buffer(slavesList *node)
 {
 	slavesListBuffer = node;
 }
 
-slavesList *getSlavesListBuffer(void)
+slavesList *get_slaves_list_buffer(void)
 {
 	return slavesListBuffer;
 }
@@ -217,7 +217,7 @@ void emptySlavesList(void)
 	{}
 }
 
-int slavesListNodeCount(int cnt)
+int slaves_list_node_count(int cnt)
 {
 	static int nodeCount = 0;
 

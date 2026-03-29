@@ -29,7 +29,7 @@ genresList *genresListSearchByTitle(const char *, unsigned int);
 genresList *getGenresListHead(void);
 void emptyGenresList(void);
 int genresListNodeCount(int);
-genresList *addGenreInList(const char *);
+genresList *add_genre_in_list(const char *);
 void sortGenresList(void);
 
 #endif

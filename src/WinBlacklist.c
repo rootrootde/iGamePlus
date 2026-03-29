@@ -128,9 +128,9 @@ void blacklistWindowDeleteAll(void)
 		char *parentDir = AllocVec(bufSize, MEMF_CLEAR);
 		if (parentDir)
 		{
-			getParentPath(curr->path, parentDir, bufSize);
+			get_parent_path(curr->path, parentDir, bufSize);
 			if (parentDir[0] != '\0')
-				deleteDirectory(parentDir);
+				delete_directory(parentDir);
 			FreeVec(parentDir);
 		}
 		slavesListRemoveByPath(curr->path, sizeof(char) * MAX_PATH_SIZE);
@@ -150,7 +150,7 @@ MakeStaticHook(BlacklistUnhideHook, blacklistWindowUnhide);
 MakeStaticHook(BlacklistUnhideAllHook, blacklistWindowUnhideAll);
 MakeStaticHook(BlacklistDeleteAllHook, blacklistWindowDeleteAll);
 
-APTR getBlacklistWindow(struct ObjApp *object)
+APTR get_blacklist_window(struct ObjApp *object)
 {
 	object->LV_Blacklist = ListObject,
 		MUIA_Frame, MUIV_Frame_InputList,

@@ -23,7 +23,7 @@
 #ifndef WIN_INFO_H
 #define WIN_INFO_H
 
-APTR getInformationWindow(struct ObjApp *);
+APTR get_information_window(struct ObjApp *);
 void setInformationWindowMethods(struct ObjApp *);
 
 #endif
