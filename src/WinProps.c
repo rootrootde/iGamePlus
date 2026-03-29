@@ -150,11 +150,4 @@ void setPropertiesWindowMethods(struct ObjApp *object)
 		3,
 		MUIM_Set, MUIA_Window_Open, FALSE
 	);
-
-	// DoMethod(object->WI_Properties,
-	// 	MUIM_Window_SetCycleChain,
-	// 	object->BT_PropertiesOK,
-	// 	object->BT_PropertiesCancel,
-	// 	0
-	// );
 }

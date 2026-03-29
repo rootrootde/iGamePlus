@@ -113,7 +113,7 @@ void getNameFromPath(char *path, char *result, unsigned int resultSize)
 void getFullPath(const char *path, char *result)
 {
 	char buf[MAX_PATH_SIZE];
-	strcpy(buf, path);
+	snprintf(buf, sizeof(buf), "%s", path);
 	if (path[0] == '/')
 	{
 		snprintf(buf, sizeof(buf), "PROGDIR:%s", path);
@@ -157,10 +157,10 @@ BOOL get_filename(const char *title, const char *positive_text, const BOOL save_
 						TAG_DONE))
 		{
 			memset(&fname[0], 0, sizeof fname);
-			strcat(fname, request->fr_Drawer);
+			snprintf(fname, sizeof(fname), "%s", request->fr_Drawer);
 			if (fname[strlen(fname) - 1] != (UBYTE)58) /* Check for : */
-				strcat(fname, "/");
-			strcat(fname, request->fr_File);
+				strncat(fname, "/", sizeof(fname) - strlen(fname) - 1);
+			strncat(fname, request->fr_File, sizeof(fname) - strlen(fname) - 1);
 
 			result = TRUE;
 		}
@@ -204,34 +204,34 @@ void slavesListLoadFromCSV(char *filename)
 
 				buf = strtok(NULL, ";");
 				node->title[0] = '\0';
-				sprintf(node->title, "%s", buf);
+				snprintf(node->title, sizeof(node->title), "%s", buf);
 				if (strcasestr(buf, "\""))
 				{
 					STRPTR tmp = substring(buf, 1, -2);
-				if (tmp) { sprintf(node->title, "%s", tmp); free(tmp); }
+				if (tmp) { snprintf(node->title, sizeof(node->title), "%s", tmp); free(tmp); }
 				}
 
 				buf = strtok(NULL, ";");
 				node->genre[0] = '\0';
-				sprintf(node->genre, "%s", buf);
+				snprintf(node->genre, sizeof(node->genre), "%s", buf);
 				if (strcasestr(buf, "\""))
 				{
 					STRPTR tmp = substring(buf, 1, -2);
-				if (tmp) { sprintf(node->genre, "%s", tmp); free(tmp); }
+				if (tmp) { snprintf(node->genre, sizeof(node->genre), "%s", tmp); free(tmp); }
 				}
 				if(isStringEmpty(node->genre))
 				{
-					sprintf(node->genre,"Unknown");
+					snprintf(node->genre, sizeof(node->genre), "Unknown");
 				}
 				addGenreInList(node->genre);
 
 				buf = strtok(NULL, ";");
 				node->path[0] = '\0';
-				sprintf(node->path, "%s", buf);
+				snprintf(node->path, sizeof(node->path), "%s", buf);
 				if (strcasestr(buf, "\""))
 				{
 					STRPTR tmp = substring(buf, 1, -2);
-				if (tmp) { sprintf(node->path, "%s", tmp); free(tmp); }
+				if (tmp) { snprintf(node->path, sizeof(node->path), "%s", tmp); free(tmp); }
 				}
 
 				buf = strtok(NULL, ";");
@@ -253,11 +253,11 @@ void slavesListLoadFromCSV(char *filename)
 				node->user_title[0] = '\0';
 				if (buf)
 				{
-					sprintf(node->user_title, "%s", buf);
+					snprintf(node->user_title, sizeof(node->user_title), "%s", buf);
 					if (strcasestr(buf, "\""))
 					{
 						STRPTR tmp = substring(buf, 1, -2);
-					if (tmp) { sprintf(node->user_title, "%s", tmp); free(tmp); }
+					if (tmp) { snprintf(node->user_title, sizeof(node->user_title), "%s", tmp); free(tmp); }
 					}
 				}
 
@@ -275,12 +275,12 @@ void slavesListLoadFromCSV(char *filename)
 				node->chipset[0] = '\0';
 				if (strncmp(buf, "\n", sizeof(char)))
 				{
-					sprintf(node->chipset, "%s", buf);
+					snprintf(node->chipset, sizeof(node->chipset), "%s", buf);
 				}
 				if (strcasestr(buf, "\""))
 				{
 					STRPTR tmp = substring(buf, 1, -2);
-				if (tmp) { sprintf(node->chipset, "%s", tmp); free(tmp); }
+				if (tmp) { snprintf(node->chipset, sizeof(node->chipset), "%s", tmp); free(tmp); }
 				}
 				addChipsetInList(node->chipset);
 
@@ -288,11 +288,11 @@ void slavesListLoadFromCSV(char *filename)
 				node->rating[0] = '\0';
 				if (buf && strncmp(buf, "\n", sizeof(char)))
 				{
-					sprintf(node->rating, "%s", buf);
+					snprintf(node->rating, sizeof(node->rating), "%s", buf);
 					if (strcasestr(buf, "\""))
 					{
 						STRPTR tmp = substring(buf, 1, -2);
-					if (tmp) { sprintf(node->rating, "%s", tmp); free(tmp); }
+					if (tmp) { snprintf(node->rating, sizeof(node->rating), "%s", tmp); free(tmp); }
 					}
 				}
 
@@ -403,7 +403,7 @@ int get_title_from_slave(char* slave, char* title)
 		}
 	}
 
-	strcpy(title, slave_title);
+	snprintf(title, MAX_SLAVE_TITLE_SIZE, "%s", slave_title);
 	fclose(fp);
 
 	return 0;
@@ -542,8 +542,8 @@ void getIconTooltypes(char *path, char *result)
 				if (!strncmp(buf, "*** DON'T EDIT", 14) || !strncmp(buf, "IM", 2))
 					continue;
 
-				strcat(result, buf);
-				strcat(result, "\n");
+				strncat(result, buf, 1024 - strlen(result) - 1);
+				strncat(result, "\n", 1024 - strlen(result) - 1);
 			}
 			FreeVec(buf);
 			FreeDiskObject(diskObj);
@@ -646,7 +646,7 @@ void prepareWHDExecution(char *infoFile, char *result)
 	char **table = my_split(tooltypes, "\n");
 	char **tableBase = table;
 	char *buf;
-	strcpy(result, "whdload");
+	snprintf(result, MAX_EXEC_SIZE, "whdload");
 	for (table; (buf = *table); ++table)
 	{
 		if (buf[0] == ' ') continue;
@@ -662,25 +662,27 @@ void prepareWHDExecution(char *infoFile, char *result)
 		if (buf[0] == '#') continue;
 		if (buf[0] == '!') continue;
 
+		char tmpBuf[MAX_EXEC_SIZE];
 		char** tmpTbl = my_split(buf, "=");
 		if (tmpTbl[1] != NULL)
 		{
 			if (tmpTbl[1][0] == '$')
 			{
-				sprintf(buf, "%s=%d", tmpTbl[0], hex2dec((char *)tmpTbl[1]));
+				snprintf(tmpBuf, sizeof(tmpBuf), "%s=%d", tmpTbl[0], hex2dec((char *)tmpTbl[1]));
 			}
 			else if (isNumeric(tmpTbl[1]))
 			{
-				sprintf(buf, "%s=%s", tmpTbl[0], tmpTbl[1]);
+				snprintf(tmpBuf, sizeof(tmpBuf), "%s=%s", tmpTbl[0], tmpTbl[1]);
 			}
 			else
 			{
-				sprintf(buf, "%s=\"%s\"", tmpTbl[0], tmpTbl[1]);
+				snprintf(tmpBuf, sizeof(tmpBuf), "%s=\"%s\"", tmpTbl[0], tmpTbl[1]);
 			}
+			buf = tmpBuf;
 		}
 
-		strcat(result, " ");
-		strcat(result, buf);
+		strncat(result, " ", MAX_EXEC_SIZE - strlen(result) - 1);
+		strncat(result, buf, MAX_EXEC_SIZE - strlen(result) - 1);
 
 		// Free tmpTbl entries and array
 		for (int i = 0; tmpTbl[i] != NULL; i++)

@@ -27,7 +27,6 @@
 #include <stdio.h>
 #include <string.h>
 
-// #define iGame_CODE
 #define iGame_NUMBERS
 #define iGame_ARRAY
 #include "iGame_strings.h"
@@ -35,7 +34,6 @@
 
 #include "strfuncs.h"
 
-// extern struct LocaleBase *LocaleBase;
 #ifndef __amigaos4__
 	extern struct Library		*LocaleBase;
 #else
@@ -185,11 +183,9 @@ char **str_split(char *a_str, const char a_delim)
 
 		while (token)
 		{
-			// assert(idx < count);
 			*(result + idx++) = strdup(token);
 			token = strtok(0, delim);
 		}
-		// assert(idx == count - 1);
 		*(result + idx) = 0;
 	}
 

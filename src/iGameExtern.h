@@ -25,7 +25,6 @@
 #define IGAME_EXT_H
 
 #define Dtpic_Classname "Dtpic.mui"
-// #define MUIA_Dtpic_Name 0x80423d72
 #define PROGDIR "PROGDIR:"
 #define DEFAULT_GAMESLIST_FILE "PROGDIR:gameslist"
 #define DEFAULT_REPOS_FILE "PROGDIR:repos.prefs"
@@ -40,28 +39,6 @@
 #define DEFAULT_LEMONAMIGA_URL "https://www.lemonamiga.com/games/details.php?id=%s"
 #define DEFAULT_HOL_URL "https://amiga.abime.net/games/view/game/id/%s"
 #define DEFAULT_POUET_URL "https://www.pouet.net/prod.php?which=%s"
-// #define SLAVE_STRING "slave"
-// #define WB_PUBSCREEN_NAME "Workbench"
-
-// #define FILENAME_HOTKEY 'f'
-// #define QUALITY_HOTKEY 'q'
-// #define QUALITY_DEFAULT MUIV_Guigfx_Quality_Low
-// #define SCALEUP_HOTKEY 'u'
-// #define SCALEUP_DEFAULT FALSE
-// #define SCALEDOWN_HOTKEY 'd'
-// #define SCALEDOWN_DEFAULT TRUE
-// #define TRANSMASK_HOTKEY 'm'
-// #define TRANSMASK_DEFAULT FALSE
-// #define TRANSCOLOR_HOTKEY 'c'
-// #define TRANSCOLOR_DEFAULT FALSE
-// #define TRANSRGB_HOTKEY 'r'
-// #define TRANSRGB_DEFAULT (0x0)
-// #define PICASPECT_DEFAULT TRUE
-// #define PICASPECT_HOTKEY 'a'
-// #define SCREENASPECT_DEFAULT TRUE
-// #define SCREENASPECT_HOTKEY 's'
-// #define SCALEMODEMASK(u,d,p,s) (((u)?GGSMF_SCALEUP:0)|((d)?GGSMF_SCALEDOWN:0)|((p)?GGSMF_KEEPASPECT_PICTURE:0)|((s)?GGSMF_KEEPASPECT_SCREEN:0))
-
 #define MENU_SCANREPOS_HOTKEY "R"
 #define MENU_ADDNONWHDLOADGAME_HOTKEY "A"
 #define MENU_OPENLIST_HOTKEY "O"

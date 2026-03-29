@@ -166,7 +166,7 @@ static void rebuild_nlist_format(void)
 	if (num_visible_columns <= 1)
 	{
 		/* Title only, no BAR separators */
-		strcpy(format_buf, "");
+		format_buf[0] = '\0';
 	}
 	else
 	{
@@ -255,12 +255,10 @@ static void setDefaultSettings(igame_settings *settings)
 
 static void getPrefsPath(STRPTR prefsPath, STRPTR prefsFile)
 {
-	strcpy(prefsPath, "ENVARC:");
-	strncat(prefsPath, prefsFile, MAX_PATH_SIZE - 5);
+	snprintf(prefsPath, MAX_PATH_SIZE, "ENVARC:%s", prefsFile);
 	if (!check_path_exists(prefsPath))
 	{
-		strcpy(prefsPath, "PROGDIR:");
-		strncat(prefsPath, prefsFile, MAX_PATH_SIZE - 10);
+		snprintf(prefsPath, MAX_PATH_SIZE, "PROGDIR:%s", prefsFile);
 	}
 }
 
@@ -400,7 +398,8 @@ static void load_repos(const char* filename)
 			item_repos->next = NULL;
 
 			getFullPath(file_line, repo_path);
-			strcpy(item_repos->repo, repo_path);
+			strncpy(item_repos->repo, repo_path, sizeof(item_repos->repo) - 1);
+			item_repos->repo[sizeof(item_repos->repo) - 1] = '\0';
 
 			if (repos == NULL)
 			{
@@ -702,20 +701,20 @@ static void launchFromWB(slavesList *node)
 	strncpy(buf, "C:WBRun", bufSize);
 	if (check_path_exists(buf))
 	{
-		sprintf(exec, "C:WBRun \"%s\"", node->path);
+		snprintf(exec, bufSize, "C:WBRun \"%s\"", node->path);
 	}
 
 	strncpy(buf, "C:WBLoad", bufSize);
 	if (check_path_exists(buf))
 	{
-		sprintf(exec, "C:WBLoad \"%s\"", node->path);
+		snprintf(exec, bufSize, "C:WBLoad \"%s\"", node->path);
 	}
 
 	if (isStringEmpty(exec))
 	{
 		if (createRunGameScript(node))
 		{
-			sprintf(exec, "Execute T:rungame");
+			snprintf(exec, bufSize, "Execute T:rungame");
 		}
 	}
 
@@ -777,7 +776,7 @@ void launch_game(void)
 		launchFromWB(existingNode);
 	}
 
-	sprintf(buf, (const char *)GetMBString(MSG_TotalNumberOfGames), slavesListNodeCount(-1));
+	snprintf(buf, bufSize, (const char *)GetMBString(MSG_TotalNumberOfGames), slavesListNodeCount(-1));
 	setStatusText(buf);
 
 	FreeVec(buf);
@@ -899,7 +898,7 @@ nextItem:
 	DoMethod(app->LV_GamesList, MUIM_NList_Sort);
 	set(app->LV_GamesList, MUIA_NList_Quiet, FALSE);
 
-	sprintf(buf, (const char *)GetMBString(MSG_TotalNumberOfGames), slavesListNodeCount(cnt));
+	snprintf(buf, bufSize, (const char *)GetMBString(MSG_TotalNumberOfGames), slavesListNodeCount(cnt));
 	setStatusText(buf);
 	free(buf);
 }
@@ -965,15 +964,16 @@ static BOOL examineFolder(char *path)
 						strncmp((unsigned char *)FIblock->fib_FileName, "data\0", 5) &&
 						strncmp((unsigned char *)FIblock->fib_FileName, "Data\0", 5)
 					) {
-						strcpy(buf, FIblock->fib_FileName);
+						strncpy(buf, FIblock->fib_FileName, bufSize - 1);
+						buf[bufSize - 1] = '\0';
 
 						if(!isPathFolder(path))
 						{
-							sprintf(buf, "%s%s", path, FIblock->fib_FileName);
+							snprintf(buf, bufSize, "%s%s", path, FIblock->fib_FileName);
 						}
 						else
 						{
-							sprintf(buf, "%s/%s", path, FIblock->fib_FileName);
+							snprintf(buf, bufSize, "%s/%s", path, FIblock->fib_FileName);
 						}
 
 						getFullPath(buf, buf);
@@ -1001,11 +1001,11 @@ static BOOL examineFolder(char *path)
 						char *igameDataPath = malloc(sizeof(char) * MAX_PATH_SIZE);
 						if(!isPathFolder(path))
 						{
-							sprintf(igameDataPath, "%s%s", path, FIblock->fib_FileName);
+							snprintf(igameDataPath, MAX_PATH_SIZE, "%s%s", path, FIblock->fib_FileName);
 						}
 						else
 						{
-							sprintf(igameDataPath, "%s/%s", path, FIblock->fib_FileName);
+							snprintf(igameDataPath, MAX_PATH_SIZE, "%s/%s", path, FIblock->fib_FileName);
 						}
 
 						node->instance = 0;
@@ -1062,11 +1062,11 @@ static BOOL examineFolder(char *path)
 
 						if(!isPathFolder(path))
 						{
-							sprintf(buf, "%s%s", path, FIblock->fib_FileName);
+							snprintf(buf, bufSize, "%s%s", path, FIblock->fib_FileName);
 						}
 						else
 						{
-							sprintf(buf, "%s/%s", path, FIblock->fib_FileName);
+							snprintf(buf, bufSize, "%s/%s", path, FIblock->fib_FileName);
 						}
 
 						// Find if already exists in the list or is blacklisted, and ignore it
@@ -1085,7 +1085,7 @@ static BOOL examineFolder(char *path)
 							node->instance = 0;
 							node->title[0] = '\0';
 							node->genre[0] = '\0';
-							sprintf(node->genre, "Unknown");
+							snprintf(node->genre, sizeof(node->genre), "Unknown");
 							node->user_title[0] = '\0';
 							node->chipset[0] = '\0';
 							node->rating[0] = '\0';
@@ -1157,7 +1157,7 @@ static BOOL examineFolder(char *path)
 									node->instance = 0;
 									node->title[0] = '\0';
 									node->genre[0] = '\0';
-									sprintf(node->genre,"Unknown");
+									snprintf(node->genre, sizeof(node->genre), "Unknown");
 									node->user_title[0] = '\0';
 									node->chipset[0] = '\0';
 									node->rating[0] = '\0';
@@ -1263,7 +1263,7 @@ void scan_repositories(void)
 							? staleEntries[i]->user_title
 							: staleEntries[i]->title;
 						strncat(titleList, name, MSG_BUF_SIZE - strlen(titleList) - 2);
-						strcat(titleList, "\n");
+						strncat(titleList, "\n", MSG_BUF_SIZE - strlen(titleList) - 1);
 					}
 					if (staleTotal > MAX_STALE_DISPLAY)
 					{
@@ -1386,7 +1386,8 @@ static void show_screenshot(STRPTR screenshot_path)
 			replaceScreenshot();
 		}
 
-		strcpy(prvScreenshot, screenshot_path);
+		strncpy(prvScreenshot, screenshot_path, MAX_PATH_SIZE - 1);
+		prvScreenshot[MAX_PATH_SIZE - 1] = '\0';
 	}
 }
 
@@ -1611,10 +1612,12 @@ void repo_add(void)
 		}
 
 		getFullPath(repo_path, buf);
-		strcpy(item_repos->repo, buf);
+		strncpy(item_repos->repo, buf, sizeof(item_repos->repo) - 1);
+		item_repos->repo[sizeof(item_repos->repo) - 1] = '\0';
 		if (isPathOnAssign(repo_path))
 		{
-			strcpy(item_repos->repo, repo_path);
+			strncpy(item_repos->repo, repo_path, sizeof(item_repos->repo) - 1);
+			item_repos->repo[sizeof(item_repos->repo) - 1] = '\0';
 		}
 
 		if (repos == NULL)
