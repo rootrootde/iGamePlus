@@ -498,10 +498,11 @@
 	(confirm "expert")
 )
 (copyfiles
-	(prompt (cat "Should iGame.info be installed at\n" #destination "?"))
+	(prompt (cat "Should iGamePlus.info be installed at\n" #destination "?"))
 	(source "iGame.info")
 	(dest #destination)
-	(help "This step will copy the iGame.info file at the destination folder. If you update an older version and you have already changed the default tooltypes, you might want to skip this step. Otherwise, proceed with the copy.")
+	(newname "iGamePlus.info")
+	(help "This step will copy the iGamePlus.info file at the destination folder. If you update an older version and you have already changed the default tooltypes, you might want to skip this step. Otherwise, proceed with the copy.")
 	(confirm "average")
 )
 
